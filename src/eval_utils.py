@@ -1,6 +1,4 @@
-"""
-Scripts for evaluation
-"""
+"""Scripts for evaluation metrics"""
 
 import math
 from sklearn import metrics
