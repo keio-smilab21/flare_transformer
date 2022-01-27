@@ -21,13 +21,15 @@ class FlareTransformer(nn.Module):
         self.trm = Encoder(mm_params["N"], EncoderLayer(
             mm_params["d_model"], c(attn), c(ff), dropout=mm_params["dropout"]))
 
-        self.magnetogram_feature_extractor = ImageFeatureExtractor(
-            16, 16, pretrain=False)
-        print("pretrain : ", pretrain_path)
-        self.magnetogram_feature_extractor.load_state_dict(
-            torch.load(pretrain_path), strict=False)
-        for param in self.magnetogram_feature_extractor.parameters():
-            param.requires_grad = False
+        # Image Feature Extractor
+        self.magnetogram_feature_extractor = CNNModel(output_channel=output_channel, pretrain=False)
+        # self.magnetogram_feature_extractor = ImageFeatureExtractor(
+        #     16, 16, pretrain=False)
+        # print("pretrain : ", pretrain_path)
+        # self.magnetogram_feature_extractor.load_state_dict(
+        #     torch.load(pretrain_path), strict=False)
+        # for param in self.magnetogram_feature_extractor.parameters():
+        #     param.requires_grad = False
 
         self.feat_model = SunspotFeatureModule(input_channel=input_channel,
                                                output_channel=output_channel,
@@ -57,12 +59,12 @@ class FlareTransformer(nn.Module):
                     [trm_input, img_output.unsqueeze(0)], dim=0)
 
         # for window
-        img_output = self.trm(trm_input)  # [bs, k, 256]
-        # img_output = self.trm(img_output) # [bs, k, 256] # for 2 image trm
+        img_output = self.trm(trm_input)  # [bs, k, MM_d_model]
+        # img_output = self.trm(img_output) # [bs, k, MM_d_model] # for 2 image trm
 
-        img_output = torch.cat([trm_input, img_output], dim=2)  # id21 res
-        img_output = torch.flatten(img_output, 1, 2)  # [bs, k*256]
-        img_output = self.linear(img_output)  # [bs, 256]
+        # img_output = torch.cat([trm_input, img_output], dim=2)  # id21 res !!!一旦外す
+        img_output = torch.flatten(img_output, 1, 2)  # [bs,*MM_d_model]
+        # img_output = self.linear(img_output)  # [bs, MM_d_model] !!!一旦外す
 
         feat_output = self.feat_model(feat)
         output = torch.cat((feat_output, img_output), 1)
@@ -376,9 +378,10 @@ class ConvolutionalBlock(nn.Module):
 
 
 class CNNModel(nn.Module):
-    def __init__(self, output_channel=4, size=2):
+    def __init__(self, output_channel=4, size=2, pretrain=False):
         super().__init__()
 
+        self.pretrain = pretrain
         self.conv1 = nn.Conv2d(1, 16, kernel_size=7,
                                stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(16)
@@ -422,10 +425,15 @@ class CNNModel(nn.Module):
         x = self.avgpool(x)
         x = self.flatten(x)
         # print(x.shape)  # [bs, 32*2*2]
+        
+        if not self.pretrain:
+            return x # [bs, 128]
+        
         x = self.fc(x)
 
         x = self.dropout(x)
         x = self.relu(x) # [bs, 32]
+        
         x = self.fc2(x)
         # print(x.shape)  # [bs, 2]
         # sys.exit()
