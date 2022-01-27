@@ -16,6 +16,7 @@ import wandb
 from src.model import FlareTransformer
 from src.Dataloader import TrainDataloader
 from src.eval_utils import calc_score
+from src.BalancedBatchSampler import TrainBalancedBatchSampler
 
 
 def gmgs_loss_function(y_pred, y_true, score_matrix):
@@ -190,6 +191,10 @@ if __name__ == "__main__":
 
     # read params/params.json
     params = json.loads(open(args.params).read())
+    print("==========================================")
+    print(params)
+    print("==========================================")
+
 
     # Initialize W&B
     if wandb_flag is True:
@@ -197,7 +202,6 @@ if __name__ == "__main__":
 
     # Initialize Dataset
     train_dataset = TrainDataloader("train", params["dataset"])
-
     if params["dataset"]["mean"] != 0:
         mean = params["dataset"]["mean"]
         std = params["dataset"]["std"]
@@ -209,7 +213,11 @@ if __name__ == "__main__":
     validation_dataset.set_mean(mean, std)
     test_dataset = TrainDataloader("test", params["dataset"])
     test_dataset.set_mean(mean, std)
-    train_dl = DataLoader(train_dataset, batch_size=params["bs"], shuffle=True)
+
+    print("Batch Sampling")
+    # train_dl = DataLoader(train_dataset, batch_size=params["bs"], shuffle=True)
+    train_dl = DataLoader(train_dataset, batch_sampler=TrainBalancedBatchSampler(
+        train_dataset, params["output_channel"], params["bs"]//params["output_channel"]))
     validation_dl = DataLoader(validation_dataset,
                                batch_size=params["bs"], shuffle=False)
     test_dl = DataLoader(test_dataset, batch_size=params["bs"], shuffle=False)
