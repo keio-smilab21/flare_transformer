@@ -22,7 +22,8 @@ class FlareTransformer(nn.Module):
             mm_params["d_model"], c(attn), c(ff), dropout=mm_params["dropout"]))
 
         # Image Feature Extractor
-        self.magnetogram_feature_extractor = CNNModel(output_channel=output_channel, pretrain=False)
+        self.magnetogram_feature_extractor = CNNModel(
+            output_channel=output_channel, pretrain=False)
         # self.magnetogram_feature_extractor = ImageFeatureExtractor(
         #     16, 16, pretrain=False)
         # print("pretrain : ", pretrain_path)
@@ -85,17 +86,34 @@ class SunspotFeatureModule(torch.nn.Module):
         self.encoder = Encoder(N, EncoderLayer(
             d_model, c(attn), c(ff), dropout=dropout))
 
+        attn2 = MultiHeadedAttention(h, d_model)
+        ff2 = PositionwiseFeedForward(d_model, d_ff, dropout)
+        self.encoder2 = Encoder(N, EncoderLayer(
+            d_model, c(attn2), c(ff2), dropout=dropout))
+
         self.relu = torch.nn.ReLU()
-        self.linear_in = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
-        self.linear_out = torch.nn.Linear(d_model, input_channel)  # 200 -> 79
-        self.bn = torch.nn.BatchNorm1d(input_channel)  # 79
-        self.bn2 = torch.nn.BatchNorm1d(d_model)  # 200
         self.generator = torch.nn.Linear(d_model, output_channel)  # 200 -> 2
         self.softmax = torch.nn.Softmax(dim=1)
 
+        self.linear_in_1 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
+        self.linear_in_2 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
+        self.linear_in_3 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
+        self.linear_out_1 = torch.nn.Linear(
+            d_model, input_channel)  # 200 -> 79
+        self.linear_out_2 = torch.nn.Linear(
+            d_model, input_channel)  # 200 -> 79
+
+        self.bn3 = torch.nn.BatchNorm1d(input_channel)  # 79
+        self.bn5 = torch.nn.BatchNorm1d(input_channel)  # 79
+        self.bn1 = torch.nn.BatchNorm1d(d_model)  # 200
+        self.bn2 = torch.nn.BatchNorm1d(d_model)  # 200
+        self.bn4 = torch.nn.BatchNorm1d(d_model)  # 200
+        self.bn6 = torch.nn.BatchNorm1d(d_model)  # 200
+        self.bn7 = torch.nn.BatchNorm1d(d_model)  # 200
+
     def forward(self, x):
-        output = self.linear_in(x)
-        output = self.bn2(output)
+        output = self.linear_in_1(x)
+        output = self.bn1(output)
         output = self.relu(output)
 
         # output = self.linear_mid(output)
@@ -105,15 +123,15 @@ class SunspotFeatureModule(torch.nn.Module):
         output = self.bn2(output)
         output = self.relu(output)
 
-        output = self.linear_out(output)
-        output = self.bn(output)
+        output = self.linear_out_1(output)
+        output = self.bn3(output)
         output = self.relu(output)
 
         middle_output = x + output
         output = middle_output
 
-        output = self.linear_in(output)
-        output = self.bn2(output)
+        output = self.linear_in_2(output)
+        output = self.bn4(output)
         output = self.relu(output)
 
         if self.mid_output == 1:
@@ -123,17 +141,17 @@ class SunspotFeatureModule(torch.nn.Module):
         output = output.unsqueeze(1)
         output = self.encoder(output)  # [bs, 1, d_model]
         output = output.squeeze(1)
-        output = self.bn2(output)
+        output = self.bn7(output)
         output = self.relu(output)
 
-        output = self.linear_out(output)
-        output = self.bn(output)
+        output = self.linear_out_2(output)
+        output = self.bn5(output)
         output = self.relu(output)
 
         output = middle_output + output
 
-        output = self.linear_in(output)
-        output = self.bn2(output)
+        output = self.linear_in_3(output)
+        output = self.bn6(output)
         output = self.relu(output)
 
         if self.mid_output == 2:
@@ -418,15 +436,15 @@ class CNNModel(nn.Module):
         x = self.avgpool(x)
         x = self.flatten(x)
         # print(x.shape)  # [bs, 32*2*2]
-        
+
         if not self.pretrain:
-            return x # [bs, 128]
-        
+            return x  # [bs, 128]
+
         x = self.fc(x)
 
         x = self.dropout(x)
-        x = self.relu(x) # [bs, 32]
-        
+        x = self.relu(x)  # [bs, 32]
+
         x = self.fc2(x)
         # print(x.shape)  # [bs, 2]
         # sys.exit()
