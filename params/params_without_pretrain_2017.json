@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id15-e_new_SFM_2_without_pretrain_and_add_BalancedBatchSampler",
+    "wandb_name": "id16-e_new_SFM_1_without_pretrain_and_add_BalancedBatchSampler",
     "epochs": 20,
     "lr": 0.000002,
     "bs": 32,

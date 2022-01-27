@@ -86,10 +86,10 @@ class SunspotFeatureModule(torch.nn.Module):
         self.encoder = Encoder(N, EncoderLayer(
             d_model, c(attn), c(ff), dropout=dropout))
 
-        attn2 = MultiHeadedAttention(h, d_model)
-        ff2 = PositionwiseFeedForward(d_model, d_ff, dropout)
-        self.encoder2 = Encoder(N, EncoderLayer(
-            d_model, c(attn2), c(ff2), dropout=dropout))
+        # attn2 = MultiHeadedAttention(h, d_model)
+        # ff2 = PositionwiseFeedForward(d_model, d_ff, dropout)
+        # self.encoder2 = Encoder(N, EncoderLayer(
+        #     d_model, c(attn2), c(ff2), dropout=dropout))
 
         self.relu = torch.nn.ReLU()
         self.generator = torch.nn.Linear(d_model, output_channel)  # 200 -> 2
@@ -97,19 +97,20 @@ class SunspotFeatureModule(torch.nn.Module):
 
         self.linear_in_1 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
         self.linear_in_2 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
-        self.linear_in_3 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
+        # self.linear_in_3 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
         self.linear_out_1 = torch.nn.Linear(
             d_model, input_channel)  # 200 -> 79
-        self.linear_out_2 = torch.nn.Linear(
-            d_model, input_channel)  # 200 -> 79
+        # self.linear_out_2 = torch.nn.Linear(
+        #     d_model, input_channel)  # 200 -> 79
 
-        self.bn3 = torch.nn.BatchNorm1d(input_channel)  # 79
-        self.bn5 = torch.nn.BatchNorm1d(input_channel)  # 79
+
         self.bn1 = torch.nn.BatchNorm1d(d_model)  # 200
         self.bn2 = torch.nn.BatchNorm1d(d_model)  # 200
+        self.bn3 = torch.nn.BatchNorm1d(input_channel)  # 79
         self.bn4 = torch.nn.BatchNorm1d(d_model)  # 200
-        self.bn6 = torch.nn.BatchNorm1d(d_model)  # 200
-        self.bn7 = torch.nn.BatchNorm1d(d_model)  # 200
+        # self.bn5 = torch.nn.BatchNorm1d(input_channel)  # 79
+        # self.bn6 = torch.nn.BatchNorm1d(d_model)  # 200
+        # self.bn7 = torch.nn.BatchNorm1d(d_model)  # 200
 
     def forward(self, x):
         output = self.linear_in_1(x)
@@ -134,31 +135,31 @@ class SunspotFeatureModule(torch.nn.Module):
         output = self.bn4(output)
         output = self.relu(output)
 
-        if self.mid_output == 1:
-            return output
+        # if self.mid_output == 1:
+        #     return output
 
-        # output = self.linear_mid(output)
-        output = output.unsqueeze(1)
-        output = self.encoder(output)  # [bs, 1, d_model]
-        output = output.squeeze(1)
-        output = self.bn7(output)
-        output = self.relu(output)
+        # # output = self.linear_mid(output)
+        # output = output.unsqueeze(1)
+        # output = self.encoder2(output)  # [bs, 1, d_model]
+        # output = output.squeeze(1)
+        # output = self.bn7(output)
+        # output = self.relu(output)
 
-        output = self.linear_out_2(output)
-        output = self.bn5(output)
-        output = self.relu(output)
+        # output = self.linear_out_2(output)
+        # output = self.bn5(output)
+        # output = self.relu(output)
 
-        output = middle_output + output
+        # output = middle_output + output
 
-        output = self.linear_in_3(output)
-        output = self.bn6(output)
-        output = self.relu(output)
+        # output = self.linear_in_3(output)
+        # output = self.bn6(output)
+        # output = self.relu(output)
 
-        if self.mid_output == 2:
-            return output
+        # if self.mid_output == 2:
+        #     return output
 
-        output = self.generator(output)
-        output = self.softmax(output)
+        # output = self.generator(output)
+        # output = self.softmax(output)
 
         return output
 
