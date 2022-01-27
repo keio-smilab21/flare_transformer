@@ -216,8 +216,8 @@ if __name__ == "__main__":
     gmgs_criterion = gmgs_loss_function
 
     # model = MagnetogramFeatureExtractor(k=16, r=16, pretrain=True).to("cuda")
-    model = CNNModel(output_channel=params["output_channel"]).to("cuda")
-    pretrain_main_metric = "real_GMGS"
+    model = CNNModel(output_channel=params["output_channel"], pretrain=True).to("cuda")
+    pretrain_main_metric = "GMGS"
 
     summary(model)
     optimizer = torch.optim.Adam(model.parameters(), lr=params["lr"])
