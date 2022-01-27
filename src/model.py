@@ -396,13 +396,6 @@ class CNNModel(nn.Module):
             16, 8, 1, downsample=downsample, norm_layer=nn.BatchNorm2d
         )
 
-        self.layer2 = Bottleneck(
-            32, 8, 1, downsample=nn.Sequential(
-                conv1x1(32, 8 * 4, 1),
-                nn.BatchNorm2d(8 * 4),
-            ), norm_layer=nn.BatchNorm2d
-        )
-
         self.avgpool = nn.AdaptiveAvgPool2d((size, size))
         self.flatten = nn.Flatten()
         # self.fc = nn.Linear(32*size*size, output_channel)
