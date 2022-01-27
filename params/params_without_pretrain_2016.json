@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id14-e_without_pretrain_and_add_BalancedBatchSampler",
+    "wandb_name": "id14-d_without_pretrain_and_add_BalancedBatchSampler",
     "epochs": 20,
     "lr": 0.000002,
     "bs": 32,
@@ -8,25 +8,25 @@
         "BS": 0
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/model_without_pretrain_2017.pth",
+    "save_model_path": "models/model_without_pretrain_2016.pth",
     "dataset": {
         "window": 1,
         "year_split": {
             "train": {
                 "start": 2010,
-                "end": 2016
+                "end": 2015
             },
             "valid": {
-                "start": 2017,
-                "end": 2017
+                "start": 2016,
+                "end": 2016
             },
             "test": {
-                "start": 2017,
-                "end": 2017
+                "start": 2016,
+                "end": 2016
             }
         },
-        "mean": 92.7943,
-        "std": 56.7613,
+        "mean": 112.9843,
+        "std": 40.3589,
         "GMGS_score_matrix": [
             [
                 0.031143319341880468,
