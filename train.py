@@ -191,14 +191,14 @@ if __name__ == "__main__":
 
     # read params/params.json
     params = json.loads(open(args.params).read())
-    print("==========================================")
-    print(params)
-    print("==========================================")
-
 
     # Initialize W&B
     if wandb_flag is True:
         wandb.init(project=args.project_name, name=params["wandb_name"])
+
+    print("==========================================")
+    print(params)
+    print("==========================================")
 
     # Initialize Dataset
     train_dataset = TrainDataloader("train", params["dataset"])

@@ -181,13 +181,14 @@ if __name__ == "__main__":
 
     # read params/params.json
     params = json.loads(open(args.params).read())
-    print("==========================================")
-    print(params)
-    print("==========================================")
 
     # Initialize W&B
     if wandb_flag is True:
         wandb.init(project=args.project_name, name=params["wandb_name"])
+
+    print("==========================================")
+    print(params)
+    print("==========================================")
 
     # Initialize Dataset
     train_dataset = PretrainDataloader("train", params["dataset"])
@@ -216,7 +217,8 @@ if __name__ == "__main__":
     gmgs_criterion = gmgs_loss_function
 
     # model = MagnetogramFeatureExtractor(k=16, r=16, pretrain=True).to("cuda")
-    model = CNNModel(output_channel=params["output_channel"], pretrain=True).to("cuda")
+    model = CNNModel(
+        output_channel=params["output_channel"], pretrain=True).to("cuda")
     pretrain_main_metric = "GMGS"
 
     summary(model)
