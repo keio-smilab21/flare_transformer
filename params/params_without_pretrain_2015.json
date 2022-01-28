@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id18-d_new_SFM_128dmodel_1trm_without_pretrain_and_add_BalancedBatchSampler",
+    "wandb_name": "id18-c_new_SFM_128dmodel_1trm_without_pretrain_and_add_BalancedBatchSampler",
     "epochs": 20,
     "lr": 0.000002,
     "bs": 32,
@@ -8,25 +8,25 @@
         "BS": 0
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id18-d.pth",
+    "save_model_path": "models/id18-c.pth",
     "dataset": {
         "window": 1,
         "year_split": {
             "train": {
                 "start": 2010,
-                "end": 2015
+                "end": 2014
             },
             "valid": {
-                "start": 2016,
-                "end": 2016
+                "start": 2015,
+                "end": 2015
             },
             "test": {
-                "start": 2016,
-                "end": 2016
+                "start": 2015,
+                "end": 2015
             }
         },
-        "mean": 112.9843,
-        "std": 40.3589,
+        "mean": 91.8833,
+        "std": 57.2211,
         "GMGS_score_matrix": [
             [
                 0.031143319341880468,
@@ -63,7 +63,7 @@
     },
     "SFM": {
         "N": 1,
-        "d_model": 256,
+        "d_model": 128,
         "h": 4,
         "d_ff": 16,
         "dropout": 0.1
