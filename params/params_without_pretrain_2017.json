@@ -1,14 +1,14 @@
 {
-    "wandb_name": "id18-e_new_SFM_128dmodel_1trm_without_pretrain_and_add_BalancedBatchSampler",
-    "epochs": 20,
-    "lr": 0.000002,
+    "wandb_name": "id18-e_lr0.1_new_SFM_128dmodel_1trm_without_pretrain_and_add_BalancedBatchSampler",
+    "epochs": 10,
+    "lr": 0.0000002,
     "bs": 32,
     "lambda": {
         "GMGS": 0,
         "BS": 0
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id18-e.pth",
+    "save_model_path": "models/id18-e_2.pth",
     "dataset": {
         "window": 1,
         "year_split": {
