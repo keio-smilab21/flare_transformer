@@ -246,7 +246,8 @@ if __name__ == "__main__":
         print("====== Epoch ", e, " ======")
         train_score, train_loss = train_epoch(model, train_dl)
         valid_score, valid_loss = eval_epoch(model, validation_dl)
-        test_score, test_loss = test_epoch(model, test_dl)
+        # test_score, test_loss = test_epoch(model, test_dl) # for train/val/test model
+        test_score, test_loss = valid_score, valid_loss
 
         if best_score["valid_"+params["main_metric"]] < \
                 valid_score["valid_"+params["main_metric"]]:
