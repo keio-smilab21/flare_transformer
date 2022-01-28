@@ -47,8 +47,9 @@ class FlareTransformer(nn.Module):
             window*mm_params["d_model"]*2, sfm_params["d_model"])
         self.softmax = nn.Softmax(dim=1)
 
-        self.generator_feat = nn.Linear(sfm_params["d_model"], output_channel)
-        self.generator_image = nn.Linear(256, output_channel)
+        # self.generator_feat = nn.Linear(sfm_params["d_model"], output_channel)
+        self.generator_image = nn.Linear(
+            mm_params["d_model"]*window, mm_params["d_model"])
 
     def forward(self, img_list, feat):
         for i, img in enumerate(img_list):  # img_list = [bs, k, 256]
@@ -64,7 +65,8 @@ class FlareTransformer(nn.Module):
         # img_output = self.trm(img_output) # [bs, k, MM_d_model] # for 2 image trm
 
         # img_output = torch.cat([trm_input, img_output], dim=2)  # id21 res !!!一旦外す
-        img_output = torch.flatten(img_output, 1, 2)  # [bs,*MM_d_model]
+        img_output = torch.flatten(img_output, 1, 2)  # [bs,window*MM_d_model]
+        img_output = self.generator_image(img_output)  # [bs, MM_d_model]
         # img_output = self.linear(img_output)  # [bs, MM_d_model] !!!一旦外す
 
         feat_output = self.feat_model(feat)
@@ -73,7 +75,6 @@ class FlareTransformer(nn.Module):
         output = self.softmax(output)
 
         return output
-
 
 class SunspotFeatureModule(torch.nn.Module):
     def __init__(self, input_channel=231, output_channel=2, N=6,
@@ -86,81 +87,113 @@ class SunspotFeatureModule(torch.nn.Module):
         self.encoder = Encoder(N, EncoderLayer(
             d_model, c(attn), c(ff), dropout=dropout))
 
-        attn2 = MultiHeadedAttention(h, d_model)
-        ff2 = PositionwiseFeedForward(d_model, d_ff, dropout)
-        self.encoder2 = Encoder(N, EncoderLayer(
-            d_model, c(attn2), c(ff2), dropout=dropout))
-
         self.relu = torch.nn.ReLU()
-        self.generator = torch.nn.Linear(d_model, output_channel)  # 200 -> 2
-        self.softmax = torch.nn.Softmax(dim=1)
 
         self.linear_in_1 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
-        self.linear_in_2 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
-        self.linear_in_3 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
-        self.linear_out_1 = torch.nn.Linear(
-            d_model, input_channel)  # 200 -> 79
-        self.linear_out_2 = torch.nn.Linear(
-            d_model, input_channel)  # 200 -> 79
 
         self.bn1 = torch.nn.BatchNorm1d(d_model)  # 200
         self.bn2 = torch.nn.BatchNorm1d(d_model)  # 200
-        self.bn3 = torch.nn.BatchNorm1d(input_channel)  # 79
-        self.bn4 = torch.nn.BatchNorm1d(d_model)  # 200
-        self.bn5 = torch.nn.BatchNorm1d(input_channel)  # 79
-        self.bn6 = torch.nn.BatchNorm1d(d_model)  # 200
-        self.bn7 = torch.nn.BatchNorm1d(d_model)  # 200
 
     def forward(self, x):
         output = self.linear_in_1(x)
         output = self.bn1(output)
         output = self.relu(output)
 
-        # output = self.linear_mid(output)
         output = output.unsqueeze(1)
         output = self.encoder(output)  # [bs, 1, d_model]
         output = output.squeeze(1)
         output = self.bn2(output)
         output = self.relu(output)
 
-        output = self.linear_out_1(output)
-        output = self.bn3(output)
-        output = self.relu(output)
+        return output # [bs, d_model]
 
-        middle_output = x + output
-        output = middle_output
 
-        output = self.linear_in_2(output)
-        output = self.bn4(output)
-        output = self.relu(output)
+# class SunspotFeatureModule(torch.nn.Module):
+#     def __init__(self, input_channel=231, output_channel=2, N=6,
+#                  d_model=256, h=4, d_ff=16, dropout=0.1, mid_output=False):
+#         super(SunspotFeatureModule, self).__init__()
+#         self.mid_output = mid_output
+#         c = copy.deepcopy
+#         attn = MultiHeadedAttention(h, d_model)
+#         ff = PositionwiseFeedForward(d_model, d_ff, dropout)
+#         self.encoder = Encoder(N, EncoderLayer(
+#             d_model, c(attn), c(ff), dropout=dropout))
 
-        if self.mid_output == 1:
-            return output
+#         attn2 = MultiHeadedAttention(h, d_model)
+#         ff2 = PositionwiseFeedForward(d_model, d_ff, dropout)
+#         self.encoder2 = Encoder(N, EncoderLayer(
+#             d_model, c(attn2), c(ff2), dropout=dropout))
 
-        # output = self.linear_mid(output)
-        output = output.unsqueeze(1)
-        output = self.encoder2(output)  # [bs, 1, d_model]
-        output = output.squeeze(1)
-        output = self.bn7(output)
-        output = self.relu(output)
+#         self.relu = torch.nn.ReLU()
+#         self.generator = torch.nn.Linear(d_model, output_channel)  # 200 -> 2
+#         self.softmax = torch.nn.Softmax(dim=1)
 
-        output = self.linear_out_2(output)
-        output = self.bn5(output)
-        output = self.relu(output)
+#         self.linear_in_1 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
+#         self.linear_in_2 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
+#         self.linear_in_3 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
+#         self.linear_out_1 = torch.nn.Linear(
+#             d_model, input_channel)  # 200 -> 79
+#         self.linear_out_2 = torch.nn.Linear(
+#             d_model, input_channel)  # 200 -> 79
 
-        output = middle_output + output
+#         self.bn1 = torch.nn.BatchNorm1d(d_model)  # 200
+#         self.bn2 = torch.nn.BatchNorm1d(d_model)  # 200
+#         self.bn3 = torch.nn.BatchNorm1d(input_channel)  # 79
+#         self.bn4 = torch.nn.BatchNorm1d(d_model)  # 200
+#         self.bn5 = torch.nn.BatchNorm1d(input_channel)  # 79
+#         self.bn6 = torch.nn.BatchNorm1d(d_model)  # 200
+#         self.bn7 = torch.nn.BatchNorm1d(d_model)  # 200
 
-        output = self.linear_in_3(output)
-        output = self.bn6(output)
-        output = self.relu(output)
+#     def forward(self, x):
+#         output = self.linear_in_1(x)
+#         output = self.bn1(output)
+#         output = self.relu(output)
 
-        if self.mid_output == 2:
-            return output
+#         # output = self.linear_mid(output)
+#         output = output.unsqueeze(1)
+#         output = self.encoder(output)  # [bs, 1, d_model]
+#         output = output.squeeze(1)
+#         output = self.bn2(output)
+#         output = self.relu(output)
 
-        output = self.generator(output)
-        output = self.softmax(output)
+#         output = self.linear_out_1(output)
+#         output = self.bn3(output)
+#         output = self.relu(output)
 
-        return output
+#         middle_output = x + output
+#         output = middle_output
+
+#         output = self.linear_in_2(output)
+#         output = self.bn4(output)
+#         output = self.relu(output)
+
+#         if self.mid_output == 1:
+#             return output
+
+#         # output = self.linear_mid(output)
+#         output = output.unsqueeze(1)
+#         output = self.encoder2(output)  # [bs, 1, d_model]
+#         output = output.squeeze(1)
+#         output = self.bn7(output)
+#         output = self.relu(output)
+
+#         output = self.linear_out_2(output)
+#         output = self.bn5(output)
+#         output = self.relu(output)
+
+#         output = middle_output + output
+
+#         output = self.linear_in_3(output)
+#         output = self.bn6(output)
+#         output = self.relu(output)
+
+#         if self.mid_output == 2:
+#             return output
+
+#         output = self.generator(output)
+#         output = self.softmax(output)
+
+#         return output
 
 
 class Encoder(torch.nn.Module):
