@@ -1,14 +1,14 @@
 {
-    "wandb_name": "id18-e_new_SFM_128dmodel_1trm_without_pretrain_and_add_BalancedBatchSampler",
+    "wandb_name": "id22-e_lr0.0000005_id20+GMGS0.1BSS0.1",
     "epochs": 20,
-    "lr": 0.000002,
+    "lr": 0.0000005,
     "bs": 32,
     "lambda": {
-        "GMGS": 0,
-        "BS": 0
+        "GMGS": 0.1,
+        "BS": 0.1
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id18-e.pth",
+    "save_model_path": "models/id21-e.pth",
     "dataset": {
         "window": 1,
         "year_split": {
