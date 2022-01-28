@@ -1,11 +1,11 @@
 {
-    "wandb_name": "id21-e_lr0.0000005_id20+GMGS1BSS1",
+    "wandb_name": "id22-e_lr0.0000005_id20+GMGS0.1BSS0.5",
     "epochs": 30,
     "lr": 0.0000005,
     "bs": 32,
     "lambda": {
-        "GMGS": 1,
-        "BS": 1
+        "GMGS": 0.01,
+        "BS": 0.01
     },
     "pretrain_model_path": "None",
     "save_model_path": "models/id21-e.pth",
