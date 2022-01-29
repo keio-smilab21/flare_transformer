@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id36-12_k=12_GMGS0.01BSS0.5_early",
+    "wandb_name": "id36-2_k=2_GMGS0.01BSS0.5_early",
     "epochs": 30,
     "lr": 0.0000007,
     "bs": 32,
@@ -8,9 +8,9 @@
         "BS": 0.5
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id36-12.pth",
+    "save_model_path": "models/id36-2.pth",
     "dataset": {
-        "window": 12,
+        "window": 2,
         "year_split": {
             "train": {
                 "start": 2010,

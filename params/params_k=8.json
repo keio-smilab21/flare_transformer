@@ -1,14 +1,14 @@
 {
-    "wandb_name": "id25-e_k=8_lr0.0000005",
-    "epochs": 40,
-    "lr": 0.0000005,
+    "wandb_name": "id36-8_k=8_GMGS0.01BSS0.5_early",
+    "epochs": 30,
+    "lr": 0.0000007,
     "bs": 32,
     "lambda": {
-        "GMGS": 0.1,
-        "BS": 0.1
+        "GMGS": 0.01,
+        "BS": 0.5
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id25-e.pth",
+    "save_model_path": "models/id36-8.pth",
     "dataset": {
         "window": 8,
         "year_split": {
