@@ -70,14 +70,35 @@ def calc_gmgs(y_predl, y_true):
 #     return bss
 
 
-def calc_bss(y_pred, y_true):
+# def calc_bss(y_pred, y_true):
+#     """
+#     Compute BSS >= M
+#     """
+#     f = [0.9053, 0.0947]
+#     y_truel = []
+#     for y in y_true:
+#         y_truel.append(convert_2_one_hot_2class(y))
+#     y_pred2 = np.reshape(np.array(y_pred).ravel(), (-1, 2))
+#     y_pred2 = np.sum(y_pred2, axis=1)
+#     bs = 0
+#     bsc = 0
+#     for p, t in zip(y_pred2.tolist(),
+#                     np.array(y_truel).ravel().tolist()):
+#         bs += (p - t) ** 2
+#     for y in np.array(y_truel).ravel().tolist():
+#         bsc += (p - y) ** 2
+#     bss = (bsc - bs) / bsc
+#     return bss
+
+def calc_BSS(y_pred, y_true, _):
     """
     Compute BSS >= M
     """
-    f = [0.9053, 0.0947]
+    climatology = [0.9053, 0.0947]
     y_truel = []
     for y in y_true:
         y_truel.append(convert_2_one_hot_2class(y))
+
     y_pred2 = np.reshape(np.array(y_pred).ravel(), (-1, 2))
     y_pred2 = np.sum(y_pred2, axis=1)
     bs = 0
@@ -85,8 +106,8 @@ def calc_bss(y_pred, y_true):
     for p, t in zip(y_pred2.tolist(),
                     np.array(y_truel).ravel().tolist()):
         bs += (p - t) ** 2
-    for y in np.array(y_truel).ravel().tolist():
-        bsc += (p - y) ** 2
+    for f, y in zip(climatology*len(y_true), np.array(y_truel).ravel().tolist()):
+        bsc += (f - y) ** 2
     bss = (bsc - bs) / bsc
     return bss
 
