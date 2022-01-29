@@ -1,6 +1,6 @@
 {
-    "wandb_name": "id24-e_bss_fix_lr0.0000005_id20+GMGS0.1BSS0.1",
-    "epochs": 30,
+    "wandb_name": "id26-e_bss_fix2_lr0.0000005_id20+GMGS0.1BSS0.1",
+    "epochs": 40,
     "lr": 0.0000005,
     "bs": 32,
     "lambda": {
@@ -8,7 +8,7 @@
         "BS": 0.1
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id24-e.pth",
+    "save_model_path": "models/id26-e.pth",
     "dataset": {
         "window": 1,
         "year_split": {
