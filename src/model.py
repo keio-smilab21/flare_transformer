@@ -51,30 +51,45 @@ class FlareTransformer(nn.Module):
         self.generator_image = nn.Linear(
             mm_params["d_model"]*window, mm_params["d_model"])
 
+        self.relu = torch.nn.ReLU()
+        self.linear_in_1 = torch.nn.Linear(
+            input_channel, sfm_params["d_model"])  # 79 -> 128
+        self.bn1 = torch.nn.BatchNorm1d(sfm_params["d_model"])  # 128
+
     def forward(self, img_list, feat):
+        # img_feat [bs, k, mm_d_model]
         for i, img in enumerate(img_list):  # img_list = [bs, k, 256]
             img_output = self.magnetogram_feature_extractor(img)
             if i == 0:
-                trm_input = img_output.unsqueeze(0)
+                img_feat = img_output.unsqueeze(0)
             else:
-                trm_input = torch.cat(
-                    [trm_input, img_output.unsqueeze(0)], dim=0)
+                img_feat = torch.cat(
+                    [img_feat, img_output.unsqueeze(0)], dim=0)
 
-        # for window
-        img_output = self.trm(trm_input)  # [bs, k, MM_d_model]
+        # physical feat
+        phys_feat = self.linear_in_1(feat)
+        phys_feat = self.bn1(phys_feat)
+        phys_feat = self.relu(phys_feat)
+
+        # SFM
+        feat_output = self.feat_model(phys_feat)  # [bs, SFM_d_model]
+
+        # MM
+        img_output = self.trm(img_feat)  # [bs, k, MM_d_model]
         # img_output = self.trm(img_output) # [bs, k, MM_d_model] # for 2 image trm
 
+        # Late fusion
         # img_output = torch.cat([trm_input, img_output], dim=2)  # id21 res !!!一旦外す
-        img_output = torch.flatten(img_output, 1, 2)  # [bs,window*MM_d_model]
+        img_output = torch.flatten(img_output, 1, 2)  # [bs, window*MM_d_model]
         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
-        # img_output = self.linear(img_output)  # [bs, MM_d_model] !!!一旦外す
 
-        feat_output = self.feat_model(feat)
+        # feat_output = self.feat_model(feat)
         output = torch.cat((feat_output, img_output), 1)
         output = self.generator(output)
         output = self.softmax(output)
 
         return output
+
 
 class SunspotFeatureModule(torch.nn.Module):
     def __init__(self, input_channel=231, output_channel=2, N=6,
@@ -88,24 +103,17 @@ class SunspotFeatureModule(torch.nn.Module):
             d_model, c(attn), c(ff), dropout=dropout))
 
         self.relu = torch.nn.ReLU()
-
-        self.linear_in_1 = torch.nn.Linear(input_channel, d_model)  # 79 -> 200
-
-        self.bn1 = torch.nn.BatchNorm1d(d_model)  # 200
-        self.bn2 = torch.nn.BatchNorm1d(d_model)  # 200
+        self.bn2 = torch.nn.BatchNorm1d(d_model)
 
     def forward(self, x):
-        output = self.linear_in_1(x)
-        output = self.bn1(output)
-        output = self.relu(output)
-
+        output = x
         output = output.unsqueeze(1)
         output = self.encoder(output)  # [bs, 1, d_model]
         output = output.squeeze(1)
         output = self.bn2(output)
         output = self.relu(output)
 
-        return output # [bs, d_model]
+        return output  # [bs, d_model]
 
 
 # class SunspotFeatureModule(torch.nn.Module):

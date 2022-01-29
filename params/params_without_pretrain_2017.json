@@ -1,14 +1,14 @@
 {
-    "wandb_name": "id28-e_GMGS0BSS10",
+    "wandb_name": "id31-e_change_SFM_test_GMGS0BSS0",
     "epochs": 40,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
         "GMGS": 0,
-        "BS": 10
+        "BS": 0
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id28-e.pth",
+    "save_model_path": "models/id31-e.pth",
     "dataset": {
         "window": 1,
         "year_split": {
