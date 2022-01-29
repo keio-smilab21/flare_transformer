@@ -90,7 +90,7 @@ def calc_gmgs(y_predl, y_true):
 #     bss = (bsc - bs) / bsc
 #     return bss
 
-def calc_BSS(y_pred, y_true, _):
+def calc_BSS(y_pred, y_true):
     """
     Compute BSS >= M
     """
