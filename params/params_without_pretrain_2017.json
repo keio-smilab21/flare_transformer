@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id31-e_change_SFM_test_GMGS0BSS0",
+    "wandb_name": "id32-e_change_SFM_test_GMGS0BSS0",
     "epochs": 40,
     "lr": 0.0000007,
     "bs": 32,
