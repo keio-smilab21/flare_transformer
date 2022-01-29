@@ -1,14 +1,14 @@
 {
-    "wandb_name": "id14-b_without_pretrain_and_add_BalancedBatchSampler",
-    "epochs": 20,
-    "lr": 0.00001,
+    "wandb_name": "id24-b_bss_fix_lr0.0000005_id20+GMGS0.1BSS0.1",
+    "epochs": 40,
+    "lr": 0.0000005,
     "bs": 32,
     "lambda": {
-        "GMGS": 0,
-        "BS": 0
+        "GMGS": 0.1,
+        "BS": 0.1
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/model_without_pretrain_2014.pth",
+    "save_model_path": "models/id24-b.pth",
     "dataset": {
         "window": 1,
         "year_split": {
@@ -63,7 +63,7 @@
     },
     "SFM": {
         "N": 1,
-        "d_model": 256,
+        "d_model": 128,
         "h": 4,
         "d_ff": 16,
         "dropout": 0.1
