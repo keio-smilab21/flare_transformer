@@ -1,6 +1,6 @@
 {
-    "wandb_name": "id33-e_k=1_SFM_test_GMGS0BSS0",
-    "epochs": 40,
+    "wandb_name": "id35-e_early_k=1_GMGS0BSS0",
+    "epochs": 30,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
@@ -8,7 +8,7 @@
         "BS": 0
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id33-e.pth",
+    "save_model_path": "models/id35-e.pth",
     "dataset": {
         "window": 1,
         "year_split": {

@@ -50,14 +50,13 @@ class FlareTransformer(nn.Module):
 
         # self.generator_feat = nn.Linear(sfm_params["d_model"], output_channel)
         self.generator_image = nn.Linear(
-            mm_params["d_model"]*window, mm_params["d_model"])
+            mm_params["d_model"]*window*2, mm_params["d_model"])
         self.generator_phys = nn.Linear(
-            sfm_params["d_model"]*window, sfm_params["d_model"])
+            sfm_params["d_model"]*window*2, sfm_params["d_model"])
 
         self.relu = torch.nn.ReLU()
         self.linear_in_1 = torch.nn.Linear(
             input_channel, sfm_params["d_model"])  # 79 -> 128
-        # self.bn1 = torch.nn.BatchNorm1d(sfm_params["d_model"])  # 128
         self.bn1 = torch.nn.BatchNorm1d(window)  # 128
 
     def forward(self, img_list, feat):
@@ -76,16 +75,18 @@ class FlareTransformer(nn.Module):
         phys_feat = self.bn1(phys_feat)
         phys_feat = self.relu(phys_feat)
 
+        # early fusion
+        phys_input = torch.cat([phys_feat, img_feat], dim=1)
+        img_input = torch.cat([phys_feat, img_feat], dim=1)
+
         # SFM
-        feat_output = self.feat_model(phys_feat)  # [bs, SFM_d_model]
-        feat_output = torch.flatten(feat_output, 1, 2)
+        feat_output = self.feat_model(phys_input)  # [bs, 2*k, SFM_d_model]
+        feat_output = torch.flatten(feat_output, 1, 2)  # [bs, 2*k*SFM_d_model]
         feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
 
         # MM
-        img_output = self.trm(img_feat)  # [bs, k, MM_d_model]
-        # img_output = self.trm(img_output) # [bs, k, MM_d_model] # for 2 image trm
-        # img_output = torch.cat([trm_input, img_output], dim=2)  # id21 res !!!一旦外す
-        img_output = torch.flatten(img_output, 1, 2)  # [bs, window*MM_d_model]
+        img_output = self.trm(img_input)  # [bs, 2*k, MM_d_model]
+        img_output = torch.flatten(img_output, 1, 2)
         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
 
         # Late fusion
@@ -109,7 +110,7 @@ class SunspotFeatureModule(torch.nn.Module):
 
         self.relu = torch.nn.ReLU()
         # self.bn2 = torch.nn.BatchNorm1d(d_model)
-        self.bn2 = torch.nn.BatchNorm1d(window)
+        self.bn2 = torch.nn.BatchNorm1d(window*2)
 
     def forward(self, x):
         output = x
