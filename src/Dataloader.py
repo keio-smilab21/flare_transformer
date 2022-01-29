@@ -49,15 +49,12 @@ class TrainDataloader(Dataset):
         #  fancy index
         mul_x = self.img[np.asarray(self.window[idx][:self.window_size],
                                     dtype=int)]
-        # mul_feat = self.feat[np.asarray(self.window[idx][:self.window_size],
-        #                                 dtype=int)]
-        # sample = ((mul_x - self.mean) / self.std,
-        #           mul_feat,
-        #           self.feat[idx, :])
-
+        mul_feat = self.feat[np.asarray(self.window[idx][:self.window_size],
+                                        dtype=int)]
         sample = ((mul_x - self.mean) / self.std,
-                  mul_feat,
-                  self.feat[idx, :])
+                  self.label[idx],
+                  mul_feat)
+
         return sample
 
     def get_multiple_year_image(self, year_dict, image_type):
