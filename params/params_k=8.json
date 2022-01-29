@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id25-e_k=2_lr0.0000005",
+    "wandb_name": "id25-e_k=8_lr0.0000005",
     "epochs": 40,
     "lr": 0.0000005,
     "bs": 32,
@@ -10,7 +10,7 @@
     "pretrain_model_path": "None",
     "save_model_path": "models/id25-e.pth",
     "dataset": {
-        "window": 2,
+        "window": 8,
         "year_split": {
             "train": {
                 "start": 2010,
