@@ -1,14 +1,14 @@
 {
-    "wandb_name": "id35-e_early_k=1_GMGS0BSS0",
+    "wandb_name": "id36-e_GMGS0.01BSS0.5_early_k=1",
     "epochs": 30,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
-        "GMGS": 0,
-        "BS": 0
+        "GMGS": 0.01,
+        "BS": 0.5
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id35-e.pth",
+    "save_model_path": "models/id36-e.pth",
     "dataset": {
         "window": 1,
         "year_split": {
