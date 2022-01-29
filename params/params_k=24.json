@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id26-e_bss_fix2_lr0.0000005_id20+GMGS0.1BSS0.1",
+    "wandb_name": "id25-e_k=24_lr0.0000005",
     "epochs": 40,
     "lr": 0.0000005,
     "bs": 32,
@@ -8,9 +8,9 @@
         "BS": 0.1
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id26-e.pth",
+    "save_model_path": "models/id25-e.pth",
     "dataset": {
-        "window": 2,
+        "window": 24,
         "year_split": {
             "train": {
                 "start": 2010,
