@@ -18,6 +18,7 @@ def calc_score(y_pred, y_true, climatology):
     score["ACC"] = calc_acc4(y_predl, y_true)
     score["TSS-M"] = calc_tss(y_predl, y_true, 2)
     score["BSS-M"] = calc_bss(y_pred, y_true, climatology)
+    score["BSS-X"] = calc_bss_x(y_pred, y_true, climatology)
     score["BSS"] = calc_bss_4(y_pred, y_true)
     score["GMGS"] = calc_gmgs(y_predl, y_true)
 
@@ -91,6 +92,30 @@ def calc_bss(y_pred, y_true, climatology):
     return bss
 
 
+def calc_bss_x(y_pred, y_true):
+    """
+    Compute BSS >= X
+    """
+    climatology = [0.99, 0.01]
+    y_truel = []
+    for y in y_true:
+        y_truel.append(convert_2_one_hot_Xclass(y))
+
+    y_pred_x = []
+    for py in y_pred:
+        y_pred_x.append([np.sum(py[:3]), py[-1]])
+    y_pred_x = np.array(y_pred_x).ravel()
+    bs = 0
+    bsc = 0
+    for p, t in zip(y_pred_x.tolist(),
+                    np.array(y_truel).ravel().tolist()):
+        bs += (p - t) ** 2
+    for f, y in zip(climatology*len(y_true), np.array(y_truel).ravel().tolist()):
+        bsc += (f - y) ** 2
+    bss = (bsc - bs) / bsc
+    return bss
+
+
 def convert_2_one_hot(binary_value):
     """
     return four-dimentional 1-of-K vector
@@ -109,6 +134,15 @@ def convert_2_one_hot_2class(binary_value):
     return 2-dimentional 1-of-K vector
     """
     if binary_value == 3 or binary_value == 2:
+        return [0, 1]
+    return [1, 0]
+
+
+def convert_2_one_hot_Xclass(binary_value):
+    """
+    return 2-dimentional 1-of-K vector
+    """
+    if binary_value == 3:
         return [0, 1]
     return [1, 0]
 
