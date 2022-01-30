@@ -6,7 +6,7 @@ from sklearn import metrics
 import numpy as np
 
 
-def calc_score(y_pred, y_true):
+def calc_score(y_pred, y_true, climatology):
     """
     Compute acc, TSS, BSS, and GMGS
     """
@@ -17,7 +17,7 @@ def calc_score(y_pred, y_true):
 
     score["ACC"] = calc_acc4(y_predl, y_true)
     score["TSS-M"] = calc_tss(y_predl, y_true, 2)
-    score["BSS-M"] = calc_bss(y_pred, y_true)
+    score["BSS-M"] = calc_bss(y_pred, y_true, climatology)
     score["GMGS"] = calc_gmgs(y_predl, y_true)
 
     return score
@@ -90,11 +90,10 @@ def calc_gmgs(y_predl, y_true):
 #     bss = (bsc - bs) / bsc
 #     return bss
 
-def calc_bss(y_pred, y_true):
+def calc_bss(y_pred, y_true, climatology):
     """
     Compute BSS >= M
     """
-    climatology = [0.9053, 0.0947]
     y_truel = []
     for y in y_true:
         y_truel.append(convert_2_one_hot_2class(y))

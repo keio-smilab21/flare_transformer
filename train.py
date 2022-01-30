@@ -86,7 +86,8 @@ def train_epoch(model, train_dl):
             predictions.append(pred)
             observations.append(np.argmax(o))
 
-    score = calc_score(predictions, observations)
+    score = calc_score(predictions, observations,
+                       params["dataset"]["climatology"])
     score = calc_test_score(score, "train")
 
     return score, train_loss/n
@@ -124,7 +125,8 @@ def eval_epoch(model, validation_dl):
                                y.numpy().tolist()):
                 predictions.append(pred)
                 observations.append(np.argmax(o))
-        score = calc_score(predictions, observations)
+        score = calc_score(predictions, observations,
+                           params["dataset"]["climatology"])
         score = calc_test_score(score, "valid")
     return score, valid_loss/n
 
@@ -161,7 +163,8 @@ def test_epoch(model, test_dl):
             for pred, o in zip(output.cpu().numpy().tolist(), y.tolist()):
                 predictions.append(pred)
                 observations.append(np.argmax(o))
-        score = calc_score(predictions, observations)
+        score = calc_score(predictions, observations,
+                           params["dataset"]["climatology"])
         score = calc_test_score(score, "test")
     return score, test_loss/n
 
