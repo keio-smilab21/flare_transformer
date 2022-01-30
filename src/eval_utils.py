@@ -18,6 +18,7 @@ def calc_score(y_pred, y_true, climatology):
     score["ACC"] = calc_acc4(y_predl, y_true)
     score["TSS-M"] = calc_tss(y_predl, y_true, 2)
     score["BSS-M"] = calc_bss(y_pred, y_true, climatology)
+    score["BSS"] = calc_bss_4(y_pred, y_true)
     score["GMGS"] = calc_gmgs(y_predl, y_true)
 
     return score
@@ -49,46 +50,25 @@ def calc_gmgs(y_predl, y_true):
     return (tss_x + tss_m + tss_c) / 3
 
 
-# def calc_bss(y_pred, y_true):
-#     """
-#     Compute BSS
-#     """
-#     f = [0.5405, 0.3648, 0.0861, 0.0086]
-#     y_truel = []
-#     for y in y_true:
-#         y_truel.append(convert_2_one_hot(y))
+def calc_bss_4(y_pred, y_true):
+    """
+    Compute BSS
+    """
+    climatology = [0.5405, 0.3648, 0.0861, 0.0086]
+    y_truel = []
+    for y in y_true:
+        y_truel.append(convert_2_one_hot(y))
 
-#     bs = 0
-#     bsc = 0
-#     for p, t in zip(np.array(y_pred).ravel().tolist(),
-#                     np.array(y_truel).ravel().tolist()):
-#         bs += (p - t) ** 2
-#     for y in y_true:
-#         for p, t in zip(f, convert_2_one_hot(y)):
-#             bsc += (p - t) ** 2
-#     bss = (bsc - bs) / bsc
-#     return bss
+    bs = 0
+    bsc = 0
+    for p, t in zip(np.array(y_pred).ravel().tolist(),
+                    np.array(y_truel).ravel().tolist()):
+        bs += (p - t) ** 2
+    for f, y in zip(climatology*len(y_true), np.array(y_truel).ravel().tolist()):
+        bsc += (f - y) ** 2
+    bss = (bsc - bs) / bsc
+    return bss
 
-
-# def calc_bss(y_pred, y_true):
-#     """
-#     Compute BSS >= M
-#     """
-#     f = [0.9053, 0.0947]
-#     y_truel = []
-#     for y in y_true:
-#         y_truel.append(convert_2_one_hot_2class(y))
-#     y_pred2 = np.reshape(np.array(y_pred).ravel(), (-1, 2))
-#     y_pred2 = np.sum(y_pred2, axis=1)
-#     bs = 0
-#     bsc = 0
-#     for p, t in zip(y_pred2.tolist(),
-#                     np.array(y_truel).ravel().tolist()):
-#         bs += (p - t) ** 2
-#     for y in np.array(y_truel).ravel().tolist():
-#         bsc += (p - y) ** 2
-#     bss = (bsc - bs) / bsc
-#     return bss
 
 def calc_bss(y_pred, y_true, climatology):
     """
