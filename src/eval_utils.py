@@ -18,7 +18,7 @@ def calc_score(y_pred, y_true, climatology):
     score["ACC"] = calc_acc4(y_predl, y_true)
     score["TSS-M"] = calc_tss(y_predl, y_true, 2)
     score["BSS-M"] = calc_bss(y_pred, y_true, climatology)
-    score["BSS-X"] = calc_bss_x(y_pred, y_true, climatology)
+    score["BSS-X"] = calc_bss_x(y_pred, y_true)
     score["BSS"] = calc_bss_4(y_pred, y_true)
     score["GMGS"] = calc_gmgs(y_predl, y_true)
 
