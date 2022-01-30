@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id36-c_GMGS0.01BSS0.5_early_k=1",
+    "wandb_name": "id37-c1_N=2_GMGS0.01BSS0.5_early",
     "epochs": 40,
     "lr": 0.0000007,
     "bs": 32,
@@ -8,7 +8,7 @@
         "BS": 0.5
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id36-c.pth",
+    "save_model_path": "models/id37-c4.pth",
     "dataset": {
         "window": 1,
         "year_split": {
@@ -55,14 +55,14 @@
         ]
     },
     "MM": {
-        "N": 1,
+        "N": 2,
         "d_model": 128,
         "h": 4,
         "d_ff": 16,
         "dropout": 0.1
     },
     "SFM": {
-        "N": 1,
+        "N": 2,
         "d_model": 128,
         "h": 4,
         "d_ff": 16,
