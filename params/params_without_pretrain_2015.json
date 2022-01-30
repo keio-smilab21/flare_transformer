@@ -1,14 +1,14 @@
 {
-    "wandb_name": "id38-c1_N=2_GMGS0.01BSS0.5_early",
+    "wandb_name": "id39-c1_climatology_change_N=1_GMGS0BSS10_early",
     "epochs": 40,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
-        "GMGS": 0.01,
-        "BS": 0.5
+        "GMGS": 0,
+        "BS": 10
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id37-c4.pth",
+    "save_model_path": "models/id39-c1.pth",
     "dataset": {
         "window": 1,
         "year_split": {
@@ -59,14 +59,14 @@
         ]
     },
     "MM": {
-        "N": 2,
+        "N": 1,
         "d_model": 128,
         "h": 4,
         "d_ff": 16,
         "dropout": 0.1
     },
     "SFM": {
-        "N": 2,
+        "N": 1,
         "d_model": 128,
         "h": 4,
         "d_ff": 16,
