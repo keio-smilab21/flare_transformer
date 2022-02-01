@@ -24,13 +24,6 @@ class FlareTransformer(nn.Module):
         # Image Feature Extractor
         self.magnetogram_feature_extractor = CNNModel(
             output_channel=output_channel, pretrain=False)
-        # self.magnetogram_feature_extractor = ImageFeatureExtractor(
-        #     16, 16, pretrain=False)
-        # print("pretrain : ", pretrain_path)
-        # self.magnetogram_feature_extractor.load_state_dict(
-        #     torch.load(pretrain_path), strict=False)
-        # for param in self.magnetogram_feature_extractor.parameters():
-        #     param.requires_grad = False
 
         self.feat_model = SunspotFeatureModule(input_channel=input_channel,
                                                output_channel=output_channel,
@@ -50,9 +43,9 @@ class FlareTransformer(nn.Module):
 
         # self.generator_feat = nn.Linear(sfm_params["d_model"], output_channel)
         self.generator_image = nn.Linear(
-            mm_params["d_model"]*window, mm_params["d_model"])
+            mm_params["d_model"]*window*2, mm_params["d_model"])
         self.generator_phys = nn.Linear(
-            sfm_params["d_model"]*window, sfm_params["d_model"])
+            sfm_params["d_model"]*window*2, sfm_params["d_model"])
 
         self.relu = torch.nn.ReLU()
         self.linear_in_1 = torch.nn.Linear(
@@ -70,16 +63,15 @@ class FlareTransformer(nn.Module):
                     [img_feat, img_output.unsqueeze(0)], dim=0)
 
         # physical feat
-        # print(feat.shape)  # [bs, k, 90]
         phys_feat = self.linear_in_1(feat)
         phys_feat = self.bn1(phys_feat)
         phys_feat = self.relu(phys_feat)
 
-        # no early fusion
-        # phys_input = torch.cat([phys_feat, img_feat], dim=1)
-        # img_input = torch.cat([phys_feat, img_feat], dim=1)
-        phys_input = phys_feat  # [bs, k, 128]
-        img_input = img_feat  # [bs, k, 128]
+        # early fusion
+        phys_input = torch.cat([phys_feat, img_feat], dim=1)
+        img_input = torch.cat([phys_feat, img_feat], dim=1)
+        # phys_input = phys_feat  # [bs, k, 128]
+        # img_input = img_feat  # [bs, k, 128]
 
         # SFM
         feat_output = self.feat_model(phys_input)  # [bs, 2*k, SFM_d_model]
