@@ -1,14 +1,14 @@
 {
-    "wandb_name": "id40-e1_N=1_GMGS0BSS10_early",
+    "wandb_name": "id45-e1_N=1_GMGS0BSS10_early",
     "epochs": 65,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
-        "GMGS": 0,
+        "GMGS": 0.0001,
         "BS": 10
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id40-e1.pth",
+    "save_model_path": "models/id45-e1.pth",
     "dataset": {
         "window": 1,
         "year_split": {
