@@ -53,12 +53,12 @@ class FlareTransformer(nn.Module):
         self.bn1 = torch.nn.BatchNorm1d(window)  # 128
 
         # id47
-        self.bn = torch.nn.BatchNorm1d(
-            sfm_params["d_model"]+mm_params["d_model"])
-        self.linear2 = nn.Linear(
-            2*window*(sfm_params["d_model"]+mm_params["d_model"]), sfm_params["d_model"]+mm_params["d_model"])
-        self.generator2 = nn.Linear(
-            sfm_params["d_model"]+mm_params["d_model"], output_channel)
+        # self.bn = torch.nn.BatchNorm1d(
+        #     sfm_params["d_model"]+mm_params["d_model"])
+        # self.linear2 = nn.Linear(
+        #     2*window*(sfm_params["d_model"]+mm_params["d_model"]), sfm_params["d_model"]+mm_params["d_model"])
+        # self.generator2 = nn.Linear(
+        #     sfm_params["d_model"]+mm_params["d_model"], output_channel)
 
     def forward(self, img_list, feat):
         # img_feat [bs, k, mm_d_model]
@@ -84,22 +84,22 @@ class FlareTransformer(nn.Module):
         # SFM
         feat_output = self.feat_model(phys_input)  # [bs, 2*k, SFM_d_model]
         feat_output = torch.flatten(feat_output, 1, 2)  # [bs, 2*k*SFM_d_model]
-        # feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
+        feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
 
         # MM
         img_output = self.trm(img_input)  # [bs, 2*k, MM_d_model]
         img_output = torch.flatten(img_output, 1, 2)
-        # img_output = self.generator_image(img_output)  # [bs, MM_d_model]
+        img_output = self.generator_image(img_output)  # [bs, MM_d_model]
 
         # Late fusion
         output = torch.cat((feat_output, img_output), 1)
-        # output = self.generator(output)
+        output = self.generator(output)
 
         # id 47
-        output = self.linear2(output)
-        output = self.bn(output)
-        output = self.relu(output)
-        output = self.generator2(output)
+        # output = self.linear2(output)
+        # output = self.bn(output)
+        # output = self.relu(output)
+        # output = self.generator2(output)
 
         output = self.softmax(output)
 
