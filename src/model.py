@@ -54,10 +54,11 @@ class FlareTransformer(nn.Module):
 
         # id47
         self.bn = torch.nn.BatchNorm1d(
-            window*(sfm_params["d_model"]+mm_params["d_model"]))
+            sfm_params["d_model"]+mm_params["d_model"])
         self.linear2 = nn.Linear(
-            window*(sfm_params["d_model"]+mm_params["d_model"]), sfm_params["d_model"])
-        self.generator2 = nn.Linear(sfm_params["d_model"], output_channel)
+            window*(sfm_params["d_model"]+mm_params["d_model"]), sfm_params["d_model"]+mm_params["d_model"])
+        self.generator2 = nn.Linear(
+            sfm_params["d_model"]+mm_params["d_model"], output_channel)
 
     def forward(self, img_list, feat):
         # img_feat [bs, k, mm_d_model]
