@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id47-c2_N=1_GMGS0.0001BSS10_early",
+    "wandb_name": "id45-c2_N=1_GMGS0.0001BSS10_early",
     "epochs": 50,
     "lr": 0.0000007,
     "bs": 32,
