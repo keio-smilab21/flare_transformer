@@ -6,7 +6,7 @@ from sklearn import metrics
 import numpy as np
 
 
-def calc_score(y_pred, y_true, climatology):
+def calc_score(y_pred, y_true, climatology, climatology_c):
     """
     Compute acc, TSS, BSS, and GMGS
     """
@@ -19,7 +19,7 @@ def calc_score(y_pred, y_true, climatology):
     score["TSS-M"] = calc_tss(y_predl, y_true, 2)
     score["BSS-M"] = calc_bss(y_pred, y_true, climatology)
     score["BSS-X"] = calc_bss_x(y_pred, y_true)
-    score["BSS-C"] = calc_bss_c(y_pred, y_true)
+    score["BSS-C"] = calc_bss_c(y_pred, y_true, climatology_c)
     score["BSS"] = calc_bss_4(y_pred, y_true)
     score["GMGS"] = calc_gmgs(y_predl, y_true)
 
@@ -126,11 +126,10 @@ def convert_2_one_hot_Xclass(binary_value):
     return [1, 0]
 
 
-def calc_bss_c(y_pred, y_true):
+def calc_bss_c(y_pred, y_true, climatology_c):
     """
     Compute BSS >= X
     """
-    climatology = [0.4811, 0.5189]  # 2015 test
     y_truel = []
     for y in y_true:
         y_truel.append(convert_2_one_hot_Cclass(y))
@@ -144,7 +143,7 @@ def calc_bss_c(y_pred, y_true):
     for p, t in zip(y_pred_c.tolist(),
                     np.array(y_truel).ravel().tolist()):
         bs += (p - t) ** 2
-    for f, y in zip(climatology*len(y_true), np.array(y_truel).ravel().tolist()):
+    for f, y in zip(climatology_c*len(y_true), np.array(y_truel).ravel().tolist()):
         bsc += (f - y) ** 2
     bss = (bsc - bs) / bsc
     return bss
