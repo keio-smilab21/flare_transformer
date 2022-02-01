@@ -43,9 +43,9 @@ class FlareTransformer(nn.Module):
 
         # self.generator_feat = nn.Linear(sfm_params["d_model"], output_channel)
         self.generator_image = nn.Linear(
-            mm_params["d_model"]*window*2, mm_params["d_model"])
+            mm_params["d_model"]*window, mm_params["d_model"])
         self.generator_phys = nn.Linear(
-            sfm_params["d_model"]*window*2, sfm_params["d_model"])
+            sfm_params["d_model"]*window, sfm_params["d_model"])
 
         self.relu = torch.nn.ReLU()
         self.linear_in_1 = torch.nn.Linear(
@@ -68,10 +68,10 @@ class FlareTransformer(nn.Module):
         phys_feat = self.relu(phys_feat)
 
         # early fusion
-        phys_input = torch.cat([phys_feat, img_feat], dim=1)
-        img_input = torch.cat([phys_feat, img_feat], dim=1)
-        # phys_input = phys_feat  # [bs, k, 128]
-        # img_input = img_feat  # [bs, k, 128]
+        # phys_input = torch.cat([phys_feat, img_feat], dim=1)
+        # img_input = torch.cat([phys_feat, img_feat], dim=1)
+        phys_input = phys_feat  # [bs, k, 128]
+        img_input = img_feat  # [bs, k, 128]
 
         # SFM
         feat_output = self.feat_model(phys_input)  # [bs, 2*k, SFM_d_model]
@@ -104,7 +104,7 @@ class SunspotFeatureModule(torch.nn.Module):
 
         self.relu = torch.nn.ReLU()
         # self.bn2 = torch.nn.BatchNorm1d(d_model)
-        self.bn2 = torch.nn.BatchNorm1d(window*2)
+        self.bn2 = torch.nn.BatchNorm1d(window)
 
     def forward(self, x):
         output = x
