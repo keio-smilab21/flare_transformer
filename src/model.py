@@ -52,6 +52,13 @@ class FlareTransformer(nn.Module):
             input_channel, sfm_params["d_model"])  # 79 -> 128
         self.bn1 = torch.nn.BatchNorm1d(window)  # 128
 
+        # id47
+        self.bn = torch.nn.BatchNorm1d(
+            window*(sfm_params["d_model"]+mm_params["d_model"]))
+        self.linear2 = nn.Linear(
+            window*(sfm_params["d_model"]+mm_params["d_model"]), sfm_params["d_model"])
+        self.generator2 = nn.Linear(sfm_params["d_model"], output_channel)
+
     def forward(self, img_list, feat):
         # img_feat [bs, k, mm_d_model]
         for i, img in enumerate(img_list):  # img_list = [bs, k, 256]
@@ -85,7 +92,14 @@ class FlareTransformer(nn.Module):
 
         # Late fusion
         output = torch.cat((feat_output, img_output), 1)
-        output = self.generator(output)
+        # output = self.generator(output)
+
+        # id 47
+        output = self.linear2(output)
+        output = self.bn(output)
+        output = self.relu(output)
+        output = self.generator2(output)
+
         output = self.softmax(output)
 
         return output
