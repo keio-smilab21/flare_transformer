@@ -1,6 +1,6 @@
 {
-    "wandb_name": "id45-c2_N=1_GMGS0.0001BSS10_early",
-    "epochs": 50,
+    "wandb_name": "id48-c2_N=1_GMGS0.0001BSS10_early",
+    "epochs": 25,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
@@ -8,7 +8,7 @@
         "BS": 10
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id47-c2.pth",
+    "save_model_path": "models/id48-c2.pth",
     "dataset": {
         "window": 2,
         "year_split": {
