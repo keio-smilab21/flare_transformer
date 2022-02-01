@@ -15,11 +15,11 @@ class FlareTransformer(nn.Module):
         self.pretrain_type = pretrain_type
 
         c = copy.deepcopy
-        attn = MultiHeadedAttention(mm_params["h"], mm_params["d_model"])
+        attn = MultiHeadedAttention(mm_params["h"], mm_params["d_model"]+sfm_params["d_model"])
         ff = PositionwiseFeedForward(
-            mm_params["d_model"], mm_params["d_ff"], mm_params["dropout"])
+            mm_params["d_model"]+sfm_params["d_model"], mm_params["d_ff"], mm_params["dropout"])
         self.trm = Encoder(mm_params["N"], EncoderLayer(
-            mm_params["d_model"], c(attn), c(ff), dropout=mm_params["dropout"]))
+            mm_params["d_model"]*2, c(attn), c(ff), dropout=mm_params["dropout"]))
 
         # Image Feature Extractor
         self.magnetogram_feature_extractor = CNNModel(
@@ -28,7 +28,7 @@ class FlareTransformer(nn.Module):
         self.feat_model = SunspotFeatureModule(input_channel=input_channel,
                                                output_channel=output_channel,
                                                N=sfm_params["N"],
-                                               d_model=sfm_params["d_model"],
+                                               d_model=sfm_params["d_model"]+mm_params["d_model"],
                                                h=sfm_params["h"],
                                                d_ff=sfm_params["d_ff"],
                                                dropout=sfm_params["dropout"],
@@ -52,14 +52,6 @@ class FlareTransformer(nn.Module):
             input_channel, sfm_params["d_model"])  # 79 -> 128
         self.bn1 = torch.nn.BatchNorm1d(window)  # 128
 
-        # id47
-        # self.bn = torch.nn.BatchNorm1d(
-        #     sfm_params["d_model"]+mm_params["d_model"])
-        # self.linear2 = nn.Linear(
-        #     2*window*(sfm_params["d_model"]+mm_params["d_model"]), sfm_params["d_model"]+mm_params["d_model"])
-        # self.generator2 = nn.Linear(
-        #     sfm_params["d_model"]+mm_params["d_model"], output_channel)
-
     def forward(self, img_list, feat):
         # img_feat [bs, k, mm_d_model]
         for i, img in enumerate(img_list):  # img_list = [bs, k, 256]
@@ -75,19 +67,18 @@ class FlareTransformer(nn.Module):
         phys_feat = self.bn1(phys_feat)
         phys_feat = self.relu(phys_feat)
 
-        # early fusion
-        phys_input = torch.cat([phys_feat, img_feat], dim=1)
-        img_input = torch.cat([phys_feat, img_feat], dim=1)
-        # phys_input = phys_feat  # [bs, k, 128]
-        # img_input = img_feat  # [bs, k, 128]
+        # early fusion # [bs, k, SFM_d_model + MM_d_model]
+        phys_input = torch.cat([phys_feat, img_feat], dim=2)
+        img_input = torch.cat([phys_feat, img_feat], dim=2)
 
         # SFM
-        feat_output = self.feat_model(phys_input)  # [bs, 2*k, SFM_d_model]
+        # [bs, k, SFM_d_model*2]
+        feat_output = self.feat_model(phys_input)
         feat_output = torch.flatten(feat_output, 1, 2)  # [bs, 2*k*SFM_d_model]
         feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
 
         # MM
-        img_output = self.trm(img_input)  # [bs, 2*k, MM_d_model]
+        img_output = self.trm(img_input)  # [bs, k, 2*MM_d_model]
         img_output = torch.flatten(img_output, 1, 2)
         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
 
@@ -117,17 +108,17 @@ class SunspotFeatureModule(torch.nn.Module):
         self.encoder = Encoder(N, EncoderLayer(
             d_model, c(attn), c(ff), dropout=dropout))
 
-        self.relu = torch.nn.ReLU()
+        # self.relu = torch.nn.ReLU()
         # self.bn2 = torch.nn.BatchNorm1d(d_model)
-        self.bn2 = torch.nn.BatchNorm1d(window*2)
+        # self.bn2 = torch.nn.BatchNorm1d(window)
 
     def forward(self, x):
         output = x
         # output = output.unsqueeze(1)
         output = self.encoder(output)  # [bs, 1, d_model]
         # output = output.squeeze(1)
-        output = self.bn2(output)
-        output = self.relu(output)
+        # output = self.bn2(output)
+        # output = self.relu(output)
 
         return output  # [bs, d_model]
 
