@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id49-c3_N=1_GMGS0.0001BSS10_early",
+    "wandb_name": "id50-c3_phys_only",
     "epochs": 25,
     "lr": 0.0000007,
     "bs": 32,
@@ -8,7 +8,7 @@
         "BS": 10
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id49-c3.pth",
+    "save_model_path": "models/id50-c3.pth",
     "dataset": {
         "window": 3,
         "year_split": {
