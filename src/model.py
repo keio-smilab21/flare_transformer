@@ -119,15 +119,15 @@ class SunspotFeatureModule(torch.nn.Module):
 
         self.relu = torch.nn.ReLU()
         # self.bn2 = torch.nn.BatchNorm1d(d_model)
-        self.bn2 = torch.nn.BatchNorm1d(window*2)
+        # self.bn2 = torch.nn.BatchNorm1d(window*2)
 
     def forward(self, x):
         output = x
         # output = output.unsqueeze(1)
         output = self.encoder(output)  # [bs, 1, d_model]
         # output = output.squeeze(1)
-        output = self.bn2(output)
-        output = self.relu(output)
+        # output = self.bn2(output)
+        # output = self.relu(output)
 
         return output  # [bs, d_model]
 
