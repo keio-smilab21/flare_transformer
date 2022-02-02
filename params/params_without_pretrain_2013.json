@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id45-a1_N=1_GMGS0.0001BSS10_early",
+    "wandb_name": "id45-a3_N=1_GMGS0.0001BSS10_early",
     "epochs": 25,
     "lr": 0.0000007,
     "bs": 32,
@@ -8,9 +8,9 @@
         "BS": 10
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id45-a1.pth",
+    "save_model_path": "models/id45-a3.pth",
     "dataset": {
-        "window": 1,
+        "window": 3,
         "year_split": {
             "train": {
                 "start": 2010,
