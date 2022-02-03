@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id50-e3_phys_only",
+    "wandb_name": "id51-e3_img_only",
     "epochs": 25,
     "lr": 0.0000007,
     "bs": 32,
