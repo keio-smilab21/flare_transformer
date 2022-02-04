@@ -40,15 +40,15 @@ class FlareTransformer(nn.Module):
                                                dropout=sfm_params["dropout"],
                                                mid_output=2,
                                                window=window)
-        # self.feat_model2 = SunspotFeatureModule(input_channel=input_channel,
-        #                                         output_channel=output_channel,
-        #                                         N=sfm_params["N"],
-        #                                         d_model=sfm_params["d_model"],
-        #                                         h=sfm_params["h"],
-        #                                         d_ff=sfm_params["d_ff"],
-        #                                         dropout=sfm_params["dropout"],
-        #                                         mid_output=2,
-        #                                         window=window)
+        self.feat_model2 = SunspotFeatureModule(input_channel=input_channel,
+                                                output_channel=output_channel,
+                                                N=sfm_params["N"],
+                                                d_model=sfm_params["d_model"],
+                                                h=sfm_params["h"],
+                                                d_ff=sfm_params["d_ff"],
+                                                dropout=sfm_params["dropout"],
+                                                mid_output=2,
+                                                window=window)
         self.generator = nn.Linear(sfm_params["d_model"]+mm_params["d_model"],
                                    output_channel)
 
@@ -99,7 +99,7 @@ class FlareTransformer(nn.Module):
         # SFM
         phys_feat = phys_input
         feat_output = self.feat_model(phys_input)  # [bs, k, SFM_d_model]
-        # feat_output = self.feat_model2(feat_output)  # SFM 2
+        feat_output = self.feat_model2(feat_output)  # SFM 2
         feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
         feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
         # output = self.generator1(feat_output)
