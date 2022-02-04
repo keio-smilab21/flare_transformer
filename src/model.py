@@ -21,6 +21,12 @@ class FlareTransformer(nn.Module):
         self.trm = Encoder(mm_params["N"], EncoderLayer(
             mm_params["d_model"], c(attn), c(ff), dropout=mm_params["dropout"]))
 
+        attn2 = MultiHeadedAttention(mm_params["h"], mm_params["d_model"])
+        ff2 = PositionwiseFeedForward(
+            mm_params["d_model"], mm_params["d_ff"], mm_params["dropout"])
+        self.trm2 = Encoder(mm_params["N"], EncoderLayer(
+            mm_params["d_model"], c(attn2), c(ff2), dropout=mm_params["dropout"]))
+
         # Image Feature Extractor
         self.magnetogram_feature_extractor = CNNModel(
             output_channel=output_channel, pretrain=False)
@@ -34,15 +40,15 @@ class FlareTransformer(nn.Module):
                                                dropout=sfm_params["dropout"],
                                                mid_output=2,
                                                window=window)
-        self.feat_model2 = SunspotFeatureModule(input_channel=input_channel,
-                                                output_channel=output_channel,
-                                                N=sfm_params["N"],
-                                                d_model=sfm_params["d_model"],
-                                                h=sfm_params["h"],
-                                                d_ff=sfm_params["d_ff"],
-                                                dropout=sfm_params["dropout"],
-                                                mid_output=2,
-                                                window=window)
+        # self.feat_model2 = SunspotFeatureModule(input_channel=input_channel,
+        #                                         output_channel=output_channel,
+        #                                         N=sfm_params["N"],
+        #                                         d_model=sfm_params["d_model"],
+        #                                         h=sfm_params["h"],
+        #                                         d_ff=sfm_params["d_ff"],
+        #                                         dropout=sfm_params["dropout"],
+        #                                         mid_output=2,
+        #                                         window=window)
         self.generator = nn.Linear(sfm_params["d_model"]+mm_params["d_model"],
                                    output_channel)
 
@@ -93,7 +99,7 @@ class FlareTransformer(nn.Module):
         # SFM
         phys_feat = phys_input
         feat_output = self.feat_model(phys_input)  # [bs, k, SFM_d_model]
-        feat_output = self.feat_model2(feat_output)  # SFM 2
+        # feat_output = self.feat_model2(feat_output)  # SFM 2
         feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
         feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
         # output = self.generator1(feat_output)
@@ -101,6 +107,7 @@ class FlareTransformer(nn.Module):
         # MM
         img_input = img_input
         img_output = self.trm(img_input)  # [bs, 2*k, MM_d_model]
+        img_output = self.trm2(img_output)  # MM 2
         img_output = torch.flatten(img_output, 1, 2)
         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
         # output = self.generator1(img_output)
