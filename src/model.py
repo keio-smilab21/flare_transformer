@@ -21,11 +21,11 @@ class FlareTransformer(nn.Module):
         self.trm = Encoder(mm_params["N"], EncoderLayer(
             mm_params["d_model"], c(attn), c(ff), dropout=mm_params["dropout"]))
 
-        attn2 = MultiHeadedAttention(mm_params["h"], mm_params["d_model"])
-        ff2 = PositionwiseFeedForward(
-            mm_params["d_model"], mm_params["d_ff"], mm_params["dropout"])
-        self.trm2 = Encoder(mm_params["N"], EncoderLayer(
-            mm_params["d_model"], c(attn2), c(ff2), dropout=mm_params["dropout"]))
+        # attn2 = MultiHeadedAttention(mm_params["h"], mm_params["d_model"])
+        # ff2 = PositionwiseFeedForward(
+        #     mm_params["d_model"], mm_params["d_ff"], mm_params["dropout"])
+        # self.trm2 = Encoder(mm_params["N"], EncoderLayer(
+        #     mm_params["d_model"], c(attn2), c(ff2), dropout=mm_params["dropout"]))
 
         # Image Feature Extractor
         self.magnetogram_feature_extractor = CNNModel(
@@ -107,7 +107,7 @@ class FlareTransformer(nn.Module):
         # MM
         img_input = img_input
         img_output = self.trm(img_input)  # [bs, 2*k, MM_d_model]
-        img_output = self.trm2(img_output)  # MM 2
+        # img_output = self.trm2(img_output)  # MM 2
         img_output = torch.flatten(img_output, 1, 2)
         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
         # output = self.generator1(img_output)
