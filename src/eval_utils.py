@@ -18,9 +18,9 @@ def calc_score(y_pred, y_true, climatology, climatology_c):
     score["ACC"] = calc_acc4(y_predl, y_true)
     score["TSS-M"] = calc_tss(y_predl, y_true, 2)
     score["BSS-M"] = calc_bss(y_pred, y_true, climatology)
-    score["BSS-X"] = calc_bss_x(y_pred, y_true)
-    score["BSS-C"] = calc_bss_c(y_pred, y_true, climatology_c)
-    score["BSS"] = calc_bss_4(y_pred, y_true)
+    # score["BSS-X"] = calc_bss_x(y_pred, y_true)
+    # score["BSS-C"] = calc_bss_c(y_pred, y_true, climatology_c)
+    # score["BSS"] = calc_bss_4(y_pred, y_true)
     score["GMGS"] = calc_gmgs(y_predl, y_true)
 
     return score
@@ -52,6 +52,26 @@ def calc_gmgs(y_predl, y_true):
     return (tss_x + tss_m + tss_c) / 3
 
 
+# def calc_bss(y_pred, y_true, climatology):  # backup
+#     """
+#     Compute BSS >= M
+#     """
+#     y_truel = []
+#     for y in y_true:
+#         y_truel.append(convert_2_one_hot_2class(y))
+
+#     y_pred2 = np.reshape(np.array(y_pred).ravel(), (-1, 2))
+#     y_pred2 = np.sum(y_pred2, axis=1)
+#     bs = 0
+#     bsc = 0
+#     for p, t in zip(y_pred2.tolist(),
+#                     np.array(y_truel).ravel().tolist()):
+#         bs += (p - t) ** 2
+#     for f, y in zip(climatology*len(y_true), np.array(y_truel).ravel().tolist()):
+#         bsc += (f - y) ** 2
+#     bss = (bsc - bs) / bsc
+#     return bss
+
 def calc_bss(y_pred, y_true, climatology):
     """
     Compute BSS >= M
@@ -61,15 +81,24 @@ def calc_bss(y_pred, y_true, climatology):
         y_truel.append(convert_2_one_hot_2class(y))
 
     y_pred2 = np.reshape(np.array(y_pred).ravel(), (-1, 2))
-    y_pred2 = np.sum(y_pred2, axis=1)
+    y_pred2 = np.reshape(np.sum(y_pred2, axis=1), (-1, 2))
+    # print(y_pred2, y_pred2.shape)
     bs = 0
     bsc = 0
     for p, t in zip(y_pred2.tolist(),
-                    np.array(y_truel).ravel().tolist()):
-        bs += (p - t) ** 2
-    for f, y in zip(climatology*len(y_true), np.array(y_truel).ravel().tolist()):
-        bsc += (f - y) ** 2
+                    np.array(y_truel).tolist()):
+        # print(p, t)
+        bs += (p[1] - t[1]) ** 2
+        # print(bs)
+        # sys.exit()
+    # for f, y in zip(climatology*len(y_true), np.array(y_truel).ravel().tolist()):
+    #     bsc += (f - y) ** 2
+    bs = bs / len(y_true)
+    bsc = climatology[0] * climatology[1]
     bss = (bsc - bs) / bsc
+    # print(bs, len(y_true), bsc, bss)
+    # sys.exit()
+
     return bss
 
 
