@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id52-c6_SFM2MM1",
+    "wandb_name": "id52-c1_SFM2MM1",
     "epochs": 25,
     "lr": 0.0000007,
     "bs": 32,
@@ -8,9 +8,9 @@
         "BS": 10
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id52-c6.pth",
+    "save_model_path": "models/id52-c1.pth",
     "dataset": {
-        "window": 6,
+        "window": 1,
         "year_split": {
             "train": {
                 "start": 2010,
