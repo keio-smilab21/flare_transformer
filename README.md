@@ -1,7 +1,8 @@
 # Flare Transformer
 * An overview of the Flare Transformer.
 
- ![fig1](https://user-images.githubusercontent.com/75234574/148938753-87bcdde5-b7ad-4d6a-9783-7eaa15ca5e52.png)
+![fig1](https://user-images.githubusercontent.com/75234574/154173007-d11c61d1-3541-4519-974b-a077fcceaa3b.png)
+<!--  ![fig1](https://user-images.githubusercontent.com/75234574/148938753-87bcdde5-b7ad-4d6a-9783-7eaa15ca5e52.png) -->
 
 ## 1. Requirements
 * Python 3.6.9
@@ -26,7 +27,7 @@ $ mv ~/data.zip data/
 $ unzip data/data.zip
 ```
 
-* Visit https://sdo.gsfc.nasa.gov/data/ and download hourly magnetogram images.
+* Visit https://sdo.gsfc.nasa.gov/data/ and download hourly magnetograms.
 ```
 $ mv ~/magnetogram_images.tar.gz data/
 $ tar -zxvf data/magnetogram_images.tar.gz
@@ -56,20 +57,24 @@ $ ./train.sh
 
 ## 6. Results
 * **Quantitative Results**
-  * We report the model performance and confusion matrix for the 2017 test set as follows. 
+  * We report the model performance of the Flare Transfomer as follows: 
 
-    |  | <img src="https://latex.codecogs.com/svg.image?{\rm&space;BSS}_{\rm&space;\geq&space;M}" title="{\rm BSS}_{\rm \geq M}" /> | <img src="https://latex.codecogs.com/svg.image?{\rm&space;TSS}_{\rm&space;\geq&space;M}" title="{\rm TSS}_{\rm \geq M}" /> | GMGS | 
+    |  | GMGS | <img src="https://latex.codecogs.com/svg.image?{\rm&space;TSS}_{\rm&space;\geq&space;M}" title="{\rm TSS}_{\rm \geq M}" /> | <img src="https://latex.codecogs.com/svg.image?{\rm&space;BSS}_{\rm&space;\geq&space;M}" title="{\rm BSS}_{\rm \geq M}" />  | 
     | --- | --- | --- | --- |
-    | Flare Transformer | 0.717 | 0.588 | 0.807 |
+    | Flare Transformer | 0.503 ± 0.059 | 0.530 ± 0.112 | 0.082 ± 0.974 |
 
-  ![画像1](https://user-images.githubusercontent.com/75234574/148941506-d662b282-8b75-4d54-afe8-52e0f0c111e6.png)
+  * We also report the confusion matrix for the 2017 test set as follows:
+ 
+   ![スクリーンショット (51)](https://user-images.githubusercontent.com/75234574/154173774-eea773a3-ff15-4582-9644-fcc738a7643a.png)
   
 
 
 * **Qualitative Results**
-  * The figure below shows line-of-sight magnetogram images from September 4th, 2017 12:00 UT to September 6th, 2017, 12:00 UT. An X-class solar flare occurred at 12:02 on September 6, 2017, and the model was able to predict the correct maximum solar flare class.
+  * The figure below shows line-of-sight magnetograms from September 3th, 2017 23:00 UT to September 5th, 2017, 23:00 UT. An X-class solar flare occurred at 12:02 on September 6, 2017, and the model was able to predict the correct maximum solar flare class.
   
     ![magnetogram_256](https://user-images.githubusercontent.com/75234574/148938052-5d2a017e-c8fd-4f4f-9c10-0226e447c939.gif)
+
+<!-- September 4th, 2017 12:00 UT to September 6th, 2017, 12:00 UT -->
 
 
 
