@@ -1,6 +1,6 @@
 {
-    "wandb_name": "id52-d1_SFM2MM1",
-    "epochs": 25,
+    "wandb_name": "id55-d8_MM_only_BSS",
+    "epochs": 23,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
@@ -8,9 +8,9 @@
         "BS": 10
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id52-d2.pth",
+    "save_model_path": "models/id55-d8.pth",
     "dataset": {
-        "window": 1,
+        "window": 8,
         "year_split": {
             "train": {
                 "start": 2010,
