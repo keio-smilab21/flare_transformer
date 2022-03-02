@@ -55,6 +55,15 @@ def label_smoothing(y_true, epsilon):
     return x
 
 
+def bs_loss_function(y_pred, y_true):
+    """Compute BSS loss"""
+    tmp = y_pred - y_true
+    tmp = torch.mul(tmp, tmp)
+    tmp = torch.sum(tmp, dim=1)
+    tmp = torch.mean(tmp)
+    return tmp
+
+
 def train_epoch(model, train_dl):
     """Return train loss and score for train set"""
     model.train()
@@ -67,12 +76,23 @@ def train_epoch(model, train_dl):
         output = model(x.cuda().to(torch.float))
         bce_loss = criterion(output, torch.max(y, 1)[
                              1].cuda().to(torch.long))
-        loss = bce_loss
-        # gmgs_loss = \
-        #     gmgs_criterion(output,
-        #                    y.cuda().to(torch.float),
-        #                    params["dataset"]["GMGS_score_matrix"])
-        # loss = gmgs_loss
+        # loss = bce_loss
+
+        if params["lambda"]["GMGS"] != 0:
+            gmgs_loss = gmgs_criterion(
+                output, y.cuda().to(torch.float),
+                params["dataset"]["GMGS_score_matrix"])
+        else:
+            gmgs_loss = 0
+
+        if params["lambda"]["BS"] != 0:
+            bs_loss = bs_criterion(output, y.cuda().to(torch.float))
+        else:
+            bs_loss = 0
+        loss = bce_loss + \
+            params["lambda"]["GMGS"] * gmgs_loss + \
+            params["lambda"]["BS"] * bs_loss
+
         loss.backward()
         optimizer.step()
         train_loss += (loss.detach().cpu().item() * x.shape[0])
@@ -101,12 +121,23 @@ def eval_epoch(model, validation_dl):
             output = model(x.cuda().to(torch.float))
             bce_loss = criterion(output, torch.max(y, 1)[
                                  1].cuda().to(torch.long))
-            loss = bce_loss
-            # gmgs_loss = \
-            #     gmgs_criterion(output,
-            #                    y.cuda().to(torch.float),
-            #                    params["dataset"]["GMGS_score_matrix"])
-            # loss = gmgs_loss
+            # loss = bce_loss
+
+            if params["lambda"]["GMGS"] != 0:
+                gmgs_loss = gmgs_criterion(
+                    output, y.cuda().to(torch.float),
+                    params["dataset"]["GMGS_score_matrix"])
+            else:
+                gmgs_loss = 0
+
+            if params["lambda"]["BS"] != 0:
+                bs_loss = bs_criterion(output, y.cuda().to(torch.float))
+            else:
+                bs_loss = 0
+            loss = bce_loss + \
+                params["lambda"]["GMGS"] * gmgs_loss + \
+                params["lambda"]["BS"] * bs_loss
+
             valid_loss += (loss.detach().cpu().item() * x.shape[0])
             n += x.shape[0]
             for pred, o in zip(output.cpu().numpy().tolist(),
@@ -131,12 +162,23 @@ def test_epoch(model, test_dl):
             output = model(x.cuda().to(torch.float))
             bce_loss = criterion(output, torch.max(y, 1)[
                                  1].cuda().to(torch.long))
-            loss = bce_loss
-            # gmgs_loss = \
-            #     gmgs_criterion(output,
-            #                    y.cuda().to(torch.float),
-            #                    params["dataset"]["GMGS_score_matrix"])
-            # loss = gmgs_loss
+            # loss = bce_loss
+
+            if params["lambda"]["GMGS"] != 0:
+                gmgs_loss = gmgs_criterion(
+                    output, y.cuda().to(torch.float),
+                    params["dataset"]["GMGS_score_matrix"])
+            else:
+                gmgs_loss = 0
+
+            if params["lambda"]["BS"] != 0:
+                bs_loss = bs_criterion(output, y.cuda().to(torch.float))
+            else:
+                bs_loss = 0
+            loss = bce_loss + \
+                params["lambda"]["GMGS"] * gmgs_loss + \
+                params["lambda"]["BS"] * bs_loss
+
             test_loss += (loss.detach().cpu().item() * x.shape[0])
             n += x.shape[0]
             for pred, o in zip(output.cpu().numpy().tolist(), y.tolist()):
@@ -218,6 +260,7 @@ if __name__ == "__main__":
     # Initialize Loss Function
     criterion = nn.CrossEntropyLoss().cuda()
     gmgs_criterion = gmgs_loss_function
+    bs_criterion = bs_loss_function
 
     # model = MagnetogramFeatureExtractor(k=16, r=16, pretrain=True).to("cuda")
     model = CNNModel(
