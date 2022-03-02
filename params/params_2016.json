@@ -1,32 +1,32 @@
 {
-    "wandb_name": "id40-e2_N=1_GMGS0BSS10_early",
-    "epochs": 65,
+    "wandb_name": "id1-d3",
+    "epochs": 23,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
-        "GMGS": 0,
+        "GMGS": 0.0001,
         "BS": 10
     },
     "pretrain_model_path": "None",
-    "save_model_path": "models/id40-e2.pth",
+    "save_model_path": "models/id1-d3.pth",
     "dataset": {
-        "window": 2,
+        "window": 3,
         "year_split": {
             "train": {
                 "start": 2010,
-                "end": 2016
+                "end": 2015
             },
             "valid": {
-                "start": 2017,
-                "end": 2017
+                "start": 2016,
+                "end": 2016
             },
             "test": {
-                "start": 2017,
-                "end": 2017
+                "start": 2016,
+                "end": 2016
             }
         },
-        "mean": 92.7943,
-        "std": 56.7613,
+        "mean": 112.9843,
+        "std": 40.3589,
         "GMGS_score_matrix": [
             [
                 0.031143319341880468,
@@ -54,8 +54,8 @@
             ]
         ],
         "climatology": [
-            0.9053,
-            0.0947
+            0.8909,
+            0.1091
         ]
     },
     "MM": {
