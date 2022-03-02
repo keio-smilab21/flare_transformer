@@ -71,10 +71,10 @@ $ ./train.sh
   
     ![magnetogram_256](https://user-images.githubusercontent.com/75234574/148938052-5d2a017e-c8fd-4f4f-9c10-0226e447c939.gif)
 
-* Memo
+<!-- * Memo
   * 2021/03/02 feat/09から分離
   * コードの整理が目的
-  * pretrain.pyなどを削除
+  * pretrain.pyなどを削除 -->
 
 
 
