@@ -1,6 +1,5 @@
 """Train Flare Transformer"""
 
-import sys
 import json
 import argparse
 
@@ -87,7 +86,7 @@ def train_epoch(model, train_dl):
             observations.append(np.argmax(o))
 
     score = calc_score(predictions, observations,
-                       params["dataset"]["climatology"], params["dataset"]["climatology_c"])
+                       params["dataset"]["climatology"])
     score = calc_test_score(score, "train")
 
     return score, train_loss/n
@@ -126,7 +125,7 @@ def eval_epoch(model, validation_dl):
                 predictions.append(pred)
                 observations.append(np.argmax(o))
         score = calc_score(predictions, observations,
-                           params["dataset"]["climatology"], params["dataset"]["climatology_c"])
+                           params["dataset"]["climatology"])
         score = calc_test_score(score, "valid")
     return score, valid_loss/n
 
@@ -164,7 +163,7 @@ def test_epoch(model, test_dl):
                 predictions.append(pred)
                 observations.append(np.argmax(o))
         score = calc_score(predictions, observations,
-                           params["dataset"]["climatology"], params["dataset"]["climatology_c"])
+                           params["dataset"]["climatology"])
         score = calc_test_score(score, "test")
     return score, test_loss/n
 
