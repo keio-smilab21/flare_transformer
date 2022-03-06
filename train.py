@@ -233,8 +233,6 @@ if __name__ == "__main__":
                              output_channel=params["output_channel"],
                              sfm_params=params["SFM"],
                              mm_params=params["MM"],
-                             pretrain_path=params["pretrain_model_path"],
-                             pretrain_type="magnetogram_CNN",
                              window=params["dataset"]["window"]).to("cuda")
 
     summary(model)
