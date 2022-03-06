@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import numpy as np
 
 from math import sqrt
+import sys
 # from utils.masking import TriangularCausalMask, ProbMask
 
 
@@ -53,12 +54,16 @@ class ProbAttention(nn.Module):
 
         # calculate the sampled Q_K
         K_expand = K.unsqueeze(-3).expand(B, H, L_Q, L_K, E)
-        # real U = U_part(factor*ln(L_k))*L_q
         index_sample = torch.randint(L_K, (L_Q, sample_k))
         K_sample = K_expand[:, :, torch.arange(
             L_Q).unsqueeze(1), index_sample, :]
+        # K_sample = K_expand[:, :, torch.arange(L_Q).unsqueeze(1), :, :].squeeze(2)
+        # print(Q.unsqueeze(-2).shape, K_sample.transpose(-2, -1).shape)
+        # sys.exit()
         Q_K_sample = torch.matmul(
             Q.unsqueeze(-2), K_sample.transpose(-2, -1)).squeeze(-2)
+        # print(Q_K_sample.shape)
+        # sys.exit()
 
         # find the Top_k query with sparisty measurement
         M = Q_K_sample.max(-1)[0] - torch.div(Q_K_sample.sum(-1), L_K)

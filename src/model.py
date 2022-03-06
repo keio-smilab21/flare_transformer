@@ -9,26 +9,14 @@ from torch import Tensor
 from src.attn import FullAttention, ProbAttention, AttentionLayer
 
 
+# early fusion 
 class FlareTransformer(nn.Module):
     def __init__(self, input_channel, output_channel, sfm_params, mm_params,
                  pretrain_path="None", pretrain_type="None", window=24):
         super(FlareTransformer, self).__init__()
         self.pretrain_type = pretrain_type
 
-        # attn = MultiHeadedAttention(mm_params["h"], mm_params["d_model"])
-        # ff = PositionwiseFeedForward(
-        #     mm_params["d_model"], mm_params["d_ff"], mm_params["dropout"])
-        # self.trm = Encoder(mm_params["N"], EncoderLayer(
-        #     mm_params["d_model"], c(attn), c(ff), dropout=mm_params["dropout"]))
-
-        # self.feat_model = SunspotFeatureModule(N=sfm_params["N"],
-        #                                     d_model=sfm_params["d_model"],
-        #                                     h=sfm_params["h"],
-        #                                     d_ff=sfm_params["d_ff"],
-        #                                     dropout=sfm_params["dropout"],
-        #                                     mid_output=2,
-        #                                     window=window)
-
+        # Informer
         self.magnetogram_module = InformerEncoderLayer(
             AttentionLayer(ProbAttention(False, factor=5, attention_dropout=mm_params["dropout"], output_attention=False),
                            d_model=mm_params["d_model"], n_heads=mm_params["h"], mix=False),
@@ -51,8 +39,6 @@ class FlareTransformer(nn.Module):
         self.magnetogram_feature_extractor = CNNModel(
             output_channel=output_channel, pretrain=False)
 
-       
-
         self.generator = nn.Linear(sfm_params["d_model"]+mm_params["d_model"],
                                    output_channel)
 
@@ -61,10 +47,10 @@ class FlareTransformer(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
         self.generator_image = nn.Linear(
-            mm_params["d_model"]*window*2, mm_params["d_model"])
+            mm_params["d_model"]*window, mm_params["d_model"])
 
         self.generator_phys = nn.Linear(
-            sfm_params["d_model"]*window*2, sfm_params["d_model"])
+            sfm_params["d_model"]*window, sfm_params["d_model"])
         self.relu = torch.nn.ReLU()
         self.linear_in_1 = torch.nn.Linear(
             input_channel, sfm_params["d_model"])  # 79 -> 128
@@ -86,22 +72,16 @@ class FlareTransformer(nn.Module):
         phys_feat = self.relu(phys_feat)
 
         # fusion
-        phys_input = torch.cat([phys_feat, img_feat], dim=1)
-        img_input = torch.cat([phys_feat, img_feat], dim=1)
+        merged_feat = torch.cat([phys_feat, img_feat], dim=1)
 
-        # SFM
-        phys_feat = phys_input
-        feat_output = self.sunspot_feature_module(phys_input)  # [bs, k, SFM_d_model]
-        # feat_output = self.feat_model2(feat_output)  # SFM 2
+        feat_output = self.sunspot_feature_module(phys_feat, merged_feat)  #
         feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
         feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
         # output = self.generator1(feat_output)
 
         # MM
-        img_input = img_input
-        img_output = self.magnetogram_module(img_input)  # [bs, 2*k, MM_d_model]
-        # img_output = self.trm2(img_output)  # MM 2
-        img_output = torch.flatten(img_output, 1, 2)
+        img_output = self.magnetogram_module(img_feat, merged_feat)  #
+        img_output = torch.flatten(img_output, 1, 2)  # [bs, k*SFM_d_model]
         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
 
         # Late fusion
@@ -112,7 +92,340 @@ class FlareTransformer(nn.Module):
 
         return output
 
+# # trn 1 dim flatten 
+# class FlareTransformer(nn.Module):
+#     def __init__(self, input_channel, output_channel, sfm_params, mm_params,
+#                  pretrain_path="None", pretrain_type="None", window=24):
+#         super(FlareTransformer, self).__init__()
+#         self.pretrain_type = pretrain_type
 
+#         # Informer 1 dim
+#         self.magnetogram_module = InformerEncoderLayer(
+#             AttentionLayer(ProbAttention(False, factor=5, attention_dropout=mm_params["dropout"], output_attention=False),
+#                            d_model=mm_params["d_model"]*2*window, n_heads=mm_params["h"], mix=False),
+#             mm_params["d_model"]*2*window,
+#             mm_params["d_ff"],
+#             dropout=mm_params["dropout"],
+#             activation="relu"
+#         )
+
+#         self.sunspot_feature_module = InformerEncoderLayer(
+#             AttentionLayer(ProbAttention(False, factor=5, attention_dropout=sfm_params["dropout"], output_attention=False),
+#                            d_model=sfm_params["d_model"]*2*window, n_heads=sfm_params["h"], mix=False),
+#             sfm_params["d_model"]*2*window,
+#             sfm_params["d_ff"],
+#             dropout=sfm_params["dropout"],
+#             activation="relu"
+#         )
+
+#         # Image Feature Extractor
+#         self.magnetogram_feature_extractor = CNNModel(
+#             output_channel=output_channel, pretrain=False)
+
+
+#         self.generator = nn.Linear(sfm_params["d_model"]+mm_params["d_model"],
+#                                    output_channel)
+
+#         self.linear = nn.Linear(
+#             window*mm_params["d_model"]*2, sfm_params["d_model"])
+#         self.softmax = nn.Softmax(dim=1)
+
+#         self.generator_image = nn.Linear(
+#             mm_params["d_model"]*window*2, mm_params["d_model"])
+
+#         self.generator_phys = nn.Linear(
+#             sfm_params["d_model"]*window*2, sfm_params["d_model"])
+#         self.relu = torch.nn.ReLU()
+#         self.linear_in_1 = torch.nn.Linear(
+#             input_channel, sfm_params["d_model"])  # 79 -> 128
+#         self.bn1 = torch.nn.BatchNorm1d(window)  # 128
+
+
+#     def forward(self, img_list, feat):
+#         # img_feat[bs, k, mm_d_model]
+#         for i, img in enumerate(img_list):  # img_list = [bs, k, 256]
+#             img_output = self.magnetogram_feature_extractor(img)
+#             if i == 0:
+#                 img_feat = img_output.unsqueeze(0)
+#             else:
+#                 img_feat = torch.cat(
+#                     [img_feat, img_output.unsqueeze(0)], dim=0)
+
+#         # physical feat
+#         phys_feat = self.linear_in_1(feat)
+#         phys_feat = self.bn1(phys_feat)
+#         phys_feat = self.relu(phys_feat)
+
+#         # fusion
+#         phys_input = torch.cat([phys_feat, img_feat], dim=1)
+#         img_input = torch.cat([phys_feat, img_feat], dim=1)
+
+
+#         # SFM 1 di
+#         phys_input = torch.flatten(phys_input, 1, 2).unsqueeze(1)  # [bs, 1, k*(SFM+MM)_d_model]
+#         print(phys_input.shape)
+#         feat_output = self.sunspot_feature_module(phys_input)
+#         feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
+#         feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
+#         # print(feat_output.shape)
+#         # sys.exit()
+
+#         img_input = torch.flatten(img_input, 1, 2).unsqueeze(1)  # [bs, 1, k*(SFM+MM)_d_model]
+#         # print(img_input.shape)
+#         img_output = self.magnetogram_module(img_input)
+#         img_output = torch.flatten(img_output, 1, 2)
+#         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
+#         # print(img_output.shape)
+#         # sys.exit()
+
+#         # Late fusion
+#         output = torch.cat((feat_output, img_output), 1)
+#         output = self.generator(output)
+
+#         output = self.softmax(output)
+
+#         return output
+
+
+# # trn 1 conv 
+# class FlareTransformer(nn.Module):
+#     def __init__(self, input_channel, output_channel, sfm_params, mm_params,
+#                  pretrain_path="None", pretrain_type="None", window=24):
+#         super(FlareTransformer, self).__init__()
+#         self.pretrain_type = pretrain_type
+
+#         # Informer 1 dim
+#         self.magnetogram_module = InformerEncoderLayer(
+#             AttentionLayer(ProbAttention(False, factor=5, attention_dropout=mm_params["dropout"], output_attention=False),
+#                            d_model=mm_params["d_model"], n_heads=mm_params["h"], mix=False),
+#             mm_params["d_model"],
+#             mm_params["d_ff"],
+#             dropout=mm_params["dropout"],
+#             activation="relu"
+#         )
+
+#         self.sunspot_feature_module = InformerEncoderLayer(
+#             AttentionLayer(ProbAttention(False, factor=5, attention_dropout=sfm_params["dropout"], output_attention=False),
+#                            d_model=sfm_params["d_model"], n_heads=sfm_params["h"], mix=False),
+#             sfm_params["d_model"],
+#             sfm_params["d_ff"],
+#             dropout=sfm_params["dropout"],
+#             activation="relu"
+#         )
+
+#         # Image Feature Extractor
+#         self.magnetogram_feature_extractor = CNNModel(
+#             output_channel=output_channel, pretrain=False)
+
+
+#         self.generator = nn.Linear(sfm_params["d_model"]+mm_params["d_model"],
+#                                    output_channel)
+
+#         self.linear = nn.Linear(
+#             window*mm_params["d_model"]*2, sfm_params["d_model"])
+#         self.softmax = nn.Softmax(dim=1)
+
+#         self.generator_image = nn.Linear(
+#             mm_params["d_model"]*window*2, mm_params["d_model"])
+
+#         self.generator_phys = nn.Linear(
+#             sfm_params["d_model"]*window*2, sfm_params["d_model"])
+#         self.relu = torch.nn.ReLU()
+#         self.linear_in_1 = torch.nn.Linear(
+#             input_channel, sfm_params["d_model"])  # 79 -> 128
+#         self.bn1 = torch.nn.BatchNorm1d(window)  # 128
+
+#         self.conv1 = nn.Conv1d(in_channels=window*2,
+#                                out_channels=1, kernel_size=1)
+#         self.conv2 = nn.Conv1d(in_channels=window*2,
+#                                out_channels=1, kernel_size=1)
+
+#     def forward(self, img_list, feat):
+#         # img_feat[bs, k, mm_d_model]
+#         for i, img in enumerate(img_list):  # img_list = [bs, k, 256]
+#             img_output = self.magnetogram_feature_extractor(img)
+#             if i == 0:
+#                 img_feat = img_output.unsqueeze(0)
+#             else:
+#                 img_feat = torch.cat(
+#                     [img_feat, img_output.unsqueeze(0)], dim=0)
+
+#         # physical feat
+#         phys_feat = self.linear_in_1(feat)
+#         phys_feat = self.bn1(phys_feat)
+#         phys_feat = self.relu(phys_feat)
+
+#         # fusion
+#         phys_input = torch.cat([phys_feat, img_feat], dim=1)
+#         img_input = torch.cat([phys_feat, img_feat], dim=1)
+
+
+#         # SFM 1 di
+#         phys_input = self.conv1(phys_input)  # [bs, 1, d_model]
+#         print(phys_input.shape)
+#         feat_output = self.sunspot_feature_module(phys_input)
+#         feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
+#         # feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
+#         # print(feat_output.shape)
+#         # sys.exit()
+
+#         # img_input = torch.flatten(img_input, 1, 2).unsqueeze(1)  # [bs, 1, k*(SFM+MM)_d_model]
+#         img_input = self.conv2(img_input)
+#         # print(img_input.shape)
+#         img_output = self.magnetogram_module(img_input)
+#         img_output = torch.flatten(img_output, 1, 2)
+#         # img_output = self.generator_image(img_output)  # [bs, MM_d_model]
+#         # print(img_output.shape)
+#         # sys.exit()
+
+#         # Late fusion
+#         output = torch.cat((feat_output, img_output), 1)
+#         output = self.generator(output)
+
+#         output = self.softmax(output)
+
+#         return output
+
+
+# class FlareTransformer(nn.Module):
+#     def __init__(self, input_channel, output_channel, sfm_params, mm_params,
+#                  pretrain_path="None", pretrain_type="None", window=24):
+#         super(FlareTransformer, self).__init__()
+#         self.pretrain_type = pretrain_type
+
+#         # attn = MultiHeadedAttention(mm_params["h"], mm_params["d_model"])
+#         # ff = PositionwiseFeedForward(
+#         #     mm_params["d_model"], mm_params["d_ff"], mm_params["dropout"])
+#         # self.trm = Encoder(mm_params["N"], EncoderLayer(
+#         #     mm_params["d_model"], c(attn), c(ff), dropout=mm_params["dropout"]))
+
+#         # self.feat_model = SunspotFeatureModule(N=sfm_params["N"],
+#         #                                     d_model=sfm_params["d_model"],
+#         #                                     h=sfm_params["h"],
+#         #                                     d_ff=sfm_params["d_ff"],
+#         #                                     dropout=sfm_params["dropout"],
+#         #                                     mid_output=2,
+#         #                                     window=window)
+
+#         # Informer
+#         self.magnetogram_module = InformerEncoderLayer(
+#             AttentionLayer(ProbAttention(False, factor=5, attention_dropout=mm_params["dropout"], output_attention=False),
+#                            d_model=mm_params["d_model"], n_heads=mm_params["h"], mix=False),
+#             mm_params["d_model"],
+#             mm_params["d_ff"],
+#             dropout=mm_params["dropout"],
+#             activation="relu"
+#         )
+
+#         self.sunspot_feature_module = InformerEncoderLayer(
+#             AttentionLayer(ProbAttention(False, factor=5, attention_dropout=sfm_params["dropout"], output_attention=False),
+#                            d_model=sfm_params["d_model"], n_heads=sfm_params["h"], mix=False),
+#             sfm_params["d_model"],
+#             sfm_params["d_ff"],
+#             dropout=sfm_params["dropout"],
+#             activation="relu"
+#         )
+
+#         # # Informer 1 dim
+#         # self.magnetogram_module = InformerEncoderLayer(
+#         #     AttentionLayer(ProbAttention(False, factor=5, attention_dropout=mm_params["dropout"], output_attention=False),
+#         #                    d_model=(sfm_params["d_model"] + mm_params["d_model"])*window, n_heads=mm_params["h"], mix=False),
+#         #     (sfm_params["d_model"] + mm_params["d_model"])*window,
+#         #     mm_params["d_ff"],
+#         #     dropout=mm_params["dropout"],
+#         #     activation="relu"
+#         # )
+
+#         # self.sunspot_feature_module = InformerEncoderLayer(
+#         #     AttentionLayer(ProbAttention(False, factor=5, attention_dropout=sfm_params["dropout"], output_attention=False),
+#         #                    d_model=(sfm_params["d_model"] + mm_params["d_model"])*window, n_heads=sfm_params["h"], mix=False),
+#         #     (sfm_params["d_model"] + mm_params["d_model"])*window,
+#         #     sfm_params["d_ff"],
+#         #     dropout=sfm_params["dropout"],
+#         #     activation="relu"
+#         # )
+
+#         # Image Feature Extractor
+#         self.magnetogram_feature_extractor = CNNModel(
+#             output_channel=output_channel, pretrain=False)
+
+
+#         self.generator = nn.Linear(sfm_params["d_model"]+mm_params["d_model"],
+#                                    output_channel)
+
+#         self.linear = nn.Linear(
+#             window*mm_params["d_model"]*2, sfm_params["d_model"])
+#         self.softmax = nn.Softmax(dim=1)
+
+#         self.generator_image = nn.Linear(
+#             mm_params["d_model"]*window*2, mm_params["d_model"])
+
+#         self.generator_phys = nn.Linear(
+#             sfm_params["d_model"]*window*2, sfm_params["d_model"])
+#         self.relu = torch.nn.ReLU()
+#         self.linear_in_1 = torch.nn.Linear(
+#             input_channel, sfm_params["d_model"])  # 79 -> 128
+#         self.bn1 = torch.nn.BatchNorm1d(window)  # 128
+
+#     def forward(self, img_list, feat):
+#         # img_feat[bs, k, mm_d_model]
+#         for i, img in enumerate(img_list):  # img_list = [bs, k, 256]
+#             img_output = self.magnetogram_feature_extractor(img)
+#             if i == 0:
+#                 img_feat = img_output.unsqueeze(0)
+#             else:
+#                 img_feat = torch.cat(
+#                     [img_feat, img_output.unsqueeze(0)], dim=0)
+
+#         # physical feat
+#         phys_feat = self.linear_in_1(feat)
+#         phys_feat = self.bn1(phys_feat)
+#         phys_feat = self.relu(phys_feat)
+
+#         # fusion
+#         phys_input = torch.cat([phys_feat, img_feat], dim=1)
+#         img_input = torch.cat([phys_feat, img_feat], dim=1)
+
+
+#         phys_feat = phys_input
+#         feat_output = self.sunspot_feature_module(phys_input)  # [bs, k, SFM_d_model]
+#         # feat_output = self.feat_model2(feat_output)  # SFM 2
+#         feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
+#         feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
+#         # output = self.generator1(feat_output)
+
+#         # MM
+#         img_input = img_input
+#         img_output = self.magnetogram_module(img_input)  # [bs, 2*k, MM_d_model]
+#         # img_output = self.trm2(img_output)  # MM 2
+#         img_output = torch.flatten(img_output, 1, 2)
+#         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
+
+#         # # SFM 1 dim
+#         # phys_input = torch.flatten(phys_input, 1, 2).unsqueeze(1)  # [bs, 1, k*(SFM+MM)_d_model]
+#         # print(phys_input.shape)
+#         # feat_output = self.sunspot_feature_module(phys_input)
+#         # feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
+#         # feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
+#         # print(feat_output.shape)
+
+#         # img_input = torch.flatten(img_input, 1, 2).unsqueeze(1)  # [bs, 1, k*(SFM+MM)_d_model]
+#         # print(img_input.shape)
+#         # img_output = self.magnetogram_module(img_input)
+#         # img_output = torch.flatten(img_output, 1, 2)
+#         # img_output = self.generator_image(img_output)  # [bs, MM_d_model]
+#         # print(img_output.shape)
+#         # sys.exit()
+
+#         # Late fusion
+#         output = torch.cat((feat_output, img_output), 1)
+#         output = self.generator(output)
+
+#         output = self.softmax(output)
+
+#         return output
+
+# no informer
 # class FlareTransformer(nn.Module):
 #     def __init__(self, input_channel, output_channel, sfm_params, mm_params,
 #                  pretrain_path="None", pretrain_type="None", window=24):
@@ -270,6 +583,68 @@ class EncoderLayer(torch.nn.Module):
         return self.sublayer[1](x, self.feed_forward)
 
 
+# class InformerEncoderLayer(nn.Module):
+#     def __init__(self, attention, d_model, d_ff=None, dropout=0.1, activation="relu"):
+#         super(InformerEncoderLayer, self).__init__()
+#         """ How to INIT
+#         EncoderLayer(
+#                 AttentionLayer(Attn(False, factor, attention_dropout=dropout, output_attention=output_attention), 
+#                             d_model, n_heads, mix=False),
+#                 d_model,
+#                 d_ff,
+#                 dropout=dropout,
+#                 activation=activation
+#         )
+
+#         factor : (int) default=5 ; probsparse attention factor
+#         output_attention : (bool) default=False; output attention or not
+#         mix : (bool) default=False; use mix attention in generative decoder
+
+#         Attn = ProbAttention if attn=='prob' else FullAttention
+#         encoder_layer = InformerEncoderLayer(
+#                 AttentionLayer(Attn(False, factor=5, attention_dropout=params["dropout"], output_attention=False), 
+#                             d_model=params["d_model"], n_heads=params["h"], mix=False),
+#                 params["d_model"],
+#                 params["d_ff"],
+#                 dropout=params["dropout"],
+#                 activation="relu"
+#         )
+#         """
+#         d_ff = d_ff or 4*d_model
+#         self.attention = attention
+#         self.conv1 = nn.Conv1d(in_channels=d_model,
+#                                out_channels=d_ff, kernel_size=1)
+#         self.conv2 = nn.Conv1d(
+#             in_channels=d_ff, out_channels=d_model, kernel_size=1)
+#         self.norm1 = nn.LayerNorm(d_model)
+#         self.norm2 = nn.LayerNorm(d_model)
+#         self.dropout = nn.Dropout(dropout)
+#         self.activation = F.relu if activation == "relu" else F.gelu
+
+#     def forward(self, x):
+#         """
+#         How to use'
+#             x = encoder_layer(x)
+#             (original) x, attn = attn_layer(x, attn_mask=attn_mask)
+#         """
+#         # x [B, L, D]
+#         # x = x + self.dropout(self.attention(
+#         #     x, x, x,
+#         #     attn_mask = attn_mask
+#         # ))
+#         new_x, attn = self.attention(
+#             x, x, x,
+#             attn_mask=None
+#         )
+#         x = x + self.dropout(new_x)
+
+#         y = x = self.norm1(x)
+#         y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
+#         y = self.dropout(self.conv2(y).transpose(-1, 1))
+
+#         return self.norm2(x+y)  # , attn
+
+# early fusion
 class InformerEncoderLayer(nn.Module):
     def __init__(self, attention, d_model, d_ff=None, dropout=0.1, activation="relu"):
         super(InformerEncoderLayer, self).__init__()
@@ -308,7 +683,7 @@ class InformerEncoderLayer(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.activation = F.relu if activation == "relu" else F.gelu
 
-    def forward(self, x):
+    def forward(self, q, kv):
         """
         How to use'
             x = encoder_layer(x)
@@ -320,16 +695,16 @@ class InformerEncoderLayer(nn.Module):
         #     attn_mask = attn_mask
         # ))
         new_x, attn = self.attention(
-            x, x, x,
+            q, kv, kv,
             attn_mask=None
         )
-        x = x + self.dropout(new_x)
+        q = q + self.dropout(new_x)
 
-        y = x = self.norm1(x)
+        y = q = self.norm1(q)
         y = self.dropout(self.activation(self.conv1(y.transpose(-1, 1))))
         y = self.dropout(self.conv2(y).transpose(-1, 1))
 
-        return self.norm2(x+y)  # , attn
+        return self.norm2(q+y)  # , attn
 
 
 class SublayerConnection(torch.nn.Module):
