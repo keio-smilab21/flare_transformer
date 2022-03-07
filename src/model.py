@@ -72,14 +72,31 @@ class FlareTransformer(nn.Module):
         # fusion
         merged_feat = torch.cat([phys_feat, img_feat], dim=1)
 
+
+        # Layer 1
         feat_output = self.sunspot_feature_module(phys_feat, merged_feat)  #
+        img_output = self.magnetogram_module(img_feat, merged_feat)  #
+
+        # fusion 2
+        merged_feat = torch.cat([feat_output, img_output], dim=1)
+
+        feat_output = self.sunspot_feature_module(phys_feat, merged_feat)  #
+        img_output = self.magnetogram_module(img_feat, merged_feat)  #
+
         feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
         feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
-
-        # MM
-        img_output = self.magnetogram_module(img_feat, merged_feat)  #
         img_output = torch.flatten(img_output, 1, 2)  # [bs, k*SFM_d_model]
         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
+
+        # # SFM
+        # feat_output = self.sunspot_feature_module(phys_feat, merged_feat)  #
+        # feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
+        # feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
+
+        # # MM
+        # img_output = self.magnetogram_module(img_feat, merged_feat)  #
+        # img_output = torch.flatten(img_output, 1, 2)  # [bs, k*SFM_d_model]
+        # img_output = self.generator_image(img_output)  # [bs, MM_d_model]
 
         # Late fusion
         output = torch.cat((feat_output, img_output), 1)
