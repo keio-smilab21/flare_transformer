@@ -1,6 +1,6 @@
 {
     "wandb_name": "id59-3c_informer_MM1SFM1_EF",
-    "epochs": 30,
+    "epochs": 35,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
