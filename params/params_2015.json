@@ -1,16 +1,15 @@
 {
-    "wandb_name": "id60-3c_informer_MM2SFM2_EF",
-    "epochs": 35,
+    "wandb_name": "id61-4c_lr20_informer_MM1SFM1_EF",
+    "epochs": 30,
     "lr": 0.0000007,
     "bs": 32,
     "lambda": {
         "GMGS": 0.0001,
         "BS": 10
     },
-    "pretrain_model_path": "None",
-    "save_model_path": "models/id60-3c.pth",
+    "save_model_path": "models/id61-4c.pth",
     "dataset": {
-        "window": 3,
+        "window": 4,
         "year_split": {
             "train": {
                 "start": 2010,
