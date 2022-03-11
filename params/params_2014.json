@@ -1,5 +1,5 @@
 {
-    "wandb_name": "id59-4b_informer_MM1SFM1_EF",
+    "wandb_name": "id1-4b_2014",
     "epochs": 40,
     "lr": 0.0000007,
     "bs": 32,
@@ -7,7 +7,7 @@
         "GMGS": 0.0001,
         "BS": 10
     },
-    "save_model_path": "models/id59-4b.pth",
+    "save_model_path": "models/id1-4b.pth",
     "dataset": {
         "window": 4,
         "year_split": {

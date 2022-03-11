@@ -69,7 +69,7 @@ class FlareTransformer(nn.Module):
         phys_feat = self.bn1(phys_feat)
         phys_feat = self.relu(phys_feat)
 
-        # fusion
+        # concat
         merged_feat = torch.cat([phys_feat, img_feat], dim=1)
 
         # SFM
@@ -81,23 +81,6 @@ class FlareTransformer(nn.Module):
         img_output = self.magnetogram_module(img_feat, merged_feat)  #
         img_output = torch.flatten(img_output, 1, 2)  # [bs, k*SFM_d_model]
         img_output = self.generator_image(img_output)  # [bs, MM_d_model]
-
-
-        # # Layer 1
-        # feat_output = self.sunspot_feature_module(phys_feat, merged_feat)  #
-        # img_output = self.magnetogram_module(img_feat, merged_feat)  #
-
-        # # fusion 2
-        # merged_feat = torch.cat([feat_output, img_output], dim=1)
-
-        # feat_output = self.sunspot_feature_module(feat_output, merged_feat)  #
-        # img_output = self.magnetogram_module(img_output, merged_feat)  #
-
-        # feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
-        # feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
-        # img_output = torch.flatten(img_output, 1, 2)  # [bs, k*SFM_d_model]
-        # img_output = self.generator_image(img_output)  # [bs, MM_d_model]
-
 
         # Late fusion
         output = torch.cat((feat_output, img_output), 1)
@@ -171,34 +154,10 @@ class EncoderLayer(torch.nn.Module):
 
 
 
-# early fusion
 class InformerEncoderLayer(nn.Module):
     def __init__(self, attention, d_model, d_ff=None, dropout=0.1, activation="relu"):
         super(InformerEncoderLayer, self).__init__()
-        """ How to INIT
-        EncoderLayer(
-                AttentionLayer(Attn(False, factor, attention_dropout=dropout, output_attention=output_attention), 
-                            d_model, n_heads, mix=False),
-                d_model,
-                d_ff,
-                dropout=dropout,
-                activation=activation
-        )
 
-        factor : (int) default=5 ; probsparse attention factor
-        output_attention : (bool) default=False; output attention or not
-        mix : (bool) default=False; use mix attention in generative decoder
-
-        Attn = ProbAttention if attn=='prob' else FullAttention
-        encoder_layer = InformerEncoderLayer(
-                AttentionLayer(Attn(False, factor=5, attention_dropout=params["dropout"], output_attention=False), 
-                            d_model=params["d_model"], n_heads=params["h"], mix=False),
-                params["d_model"],
-                params["d_ff"],
-                dropout=params["dropout"],
-                activation="relu"
-        )
-        """
         d_ff = d_ff or 4*d_model
         self.attention = attention
         self.conv1 = nn.Conv1d(in_channels=d_model,
