@@ -1,13 +1,13 @@
 {
-    "wandb_name": "id61-4b_lr20_informer_MM1SFM1_EF",
-    "epochs": 30,
-    "lr": 0.000002,
+    "wandb_name": "id62-4b_GMGS0.0001BSS0",
+    "epochs": 40,
+    "lr": 0.0000007,
     "bs": 32,
     "lambda": {
         "GMGS": 0.0001,
-        "BS": 10
+        "BS": 0
     },
-    "save_model_path": "models/id61-4b.pth",
+    "save_model_path": "models/id62-4b.pth",
     "dataset": {
         "window": 4,
         "year_split": {
