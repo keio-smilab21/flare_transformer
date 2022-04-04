@@ -1,15 +1,15 @@
 {
-    "wandb_name": "id62-4e_GMGS0.0001BSS0",
-    "epochs": 40,
+    "wandb_name": "id63-1e_Park",
+    "epochs": 20,
     "lr": 0.0000007,
-    "bs": 32,
+    "bs": 16,
     "lambda": {
-        "GMGS": 0.0001,
+        "GMGS": 0,
         "BS": 0
     },
-    "save_model_path": "models/id62-4e.pth",
+    "save_model_path": "models/id63-1e.pth",
     "dataset": {
-        "window": 4,
+        "window": 1,
         "year_split": {
             "train": {
                 "start": 2010,

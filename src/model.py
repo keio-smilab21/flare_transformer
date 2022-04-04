@@ -9,7 +9,7 @@ from torch import Tensor
 from src.attn import FullAttention, ProbAttention, AttentionLayer
 
 
-# early fusion 
+# early fusion
 class FlareTransformer(nn.Module):
     def __init__(self, input_channel, output_channel, sfm_params, mm_params, window=24):
         super(FlareTransformer, self).__init__()
@@ -54,60 +54,193 @@ class FlareTransformer(nn.Module):
             input_channel, sfm_params["d_model"])  # 79 -> 128
         self.bn1 = torch.nn.BatchNorm1d(window)  # 128
 
+        self.conv = ConvolutionalLayer()
+
     def forward(self, img_list, feat):
-        # img_feat[bs, k, mm_d_model]
-        for i, img in enumerate(img_list):  # img_list = [bs, k, 256]
-            img_output = self.magnetogram_feature_extractor(img)
-            if i == 0:
-                img_feat = img_output.unsqueeze(0)
-            else:
-                img_feat = torch.cat(
-                    [img_feat, img_output.unsqueeze(0)], dim=0)
 
-        # physical feat
-        phys_feat = self.linear_in_1(feat)
-        phys_feat = self.bn1(phys_feat)
-        phys_feat = self.relu(phys_feat)
+        img = img_list.squeeze(1)
+        output = self.conv(img)
 
-        # fusion
-        merged_feat = torch.cat([phys_feat, img_feat], dim=1)
+        # # img_feat[bs, k, mm_d_model]
+        # for i, img in enumerate(img_list):  # img_list = [bs, k, 256]
+        #     img_output = self.magnetogram_feature_extractor(img)
+        #     if i == 0:
+        #         img_feat = img_output.unsqueeze(0)
+        #     else:
+        #         img_feat = torch.cat(
+        #             [img_feat, img_output.unsqueeze(0)], dim=0)
 
-        # SFM
-        feat_output = self.sunspot_feature_module(phys_feat, merged_feat)  #
-        feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
-        feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
+        # # physical feat
+        # phys_feat = self.linear_in_1(feat)
+        # phys_feat = self.bn1(phys_feat)
+        # phys_feat = self.relu(phys_feat)
 
-        # MM
-        img_output = self.magnetogram_module(img_feat, merged_feat)  #
-        img_output = torch.flatten(img_output, 1, 2)  # [bs, k*SFM_d_model]
-        img_output = self.generator_image(img_output)  # [bs, MM_d_model]
+        # # fusion
+        # merged_feat = torch.cat([phys_feat, img_feat], dim=1)
 
-
-        # # Layer 1
+        # # SFM
         # feat_output = self.sunspot_feature_module(phys_feat, merged_feat)  #
-        # img_output = self.magnetogram_module(img_feat, merged_feat)  #
-
-        # # fusion 2
-        # merged_feat = torch.cat([feat_output, img_output], dim=1)
-
-        # feat_output = self.sunspot_feature_module(feat_output, merged_feat)  #
-        # img_output = self.magnetogram_module(img_output, merged_feat)  #
-
         # feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
         # feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
+
+        # # MM
+        # img_output = self.magnetogram_module(img_feat, merged_feat)  #
         # img_output = torch.flatten(img_output, 1, 2)  # [bs, k*SFM_d_model]
         # img_output = self.generator_image(img_output)  # [bs, MM_d_model]
 
+        # # # Layer 1
+        # # feat_output = self.sunspot_feature_module(phys_feat, merged_feat)  #
+        # # img_output = self.magnetogram_module(img_feat, merged_feat)  #
 
-        # Late fusion
-        output = torch.cat((feat_output, img_output), 1)
-        output = self.generator(output)
+        # # # fusion 2
+        # # merged_feat = torch.cat([feat_output, img_output], dim=1)
 
-        output = self.softmax(output)
+        # # feat_output = self.sunspot_feature_module(feat_output, merged_feat)  #
+        # # img_output = self.magnetogram_module(img_output, merged_feat)  #
+
+        # # feat_output = torch.flatten(feat_output, 1, 2)  # [bs, k*SFM_d_model]
+        # # feat_output = self.generator_phys(feat_output)  # [bs, SFM_d_model]
+        # # img_output = torch.flatten(img_output, 1, 2)  # [bs, k*SFM_d_model]
+        # # img_output = self.generator_image(img_output)  # [bs, MM_d_model]
+
+        # # Late fusion
+        # output = torch.cat((feat_output, img_output), 1)
+        # output = self.generator(output)
+
+        # output = self.softmax(output)
 
         return output
 
 
+class ConvolutionalLayer(nn.Module):
+    def __init__(self, k=16, r=16):
+        super(ConvolutionalLayer, self).__init__()
+
+        self.input_conv = nn.Conv2d(1, k, kernel_size=2, stride=2)
+        self.conv_block1 = ConvolutionalBlock(k=16, r=r)
+        self.conv_block2 = ConvolutionalBlock(k=16+2*r, r=r)
+        # self.conv_block3 = ConvolutionalBlock(k=16+4*r, r=r)
+        # self.conv_block4 = ConvolutionalBlock(k=16+6*r, r=r)
+
+        self.relu = nn.ReLU()
+        self.maxpool = nn.MaxPool2d(kernel_size=4, stride=4)
+
+        self.conv = nn.Conv2d(32, 4, kernel_size=1, stride=1)
+        self.bn = nn.BatchNorm2d(4)
+        self.linear = nn.Linear(1024, 128)
+        self.softmax = nn.Softmax(dim=1)
+        self.conv2 = nn.Conv2d(4, 4, kernel_size=4, stride=2, padding=1)
+
+        self.conv4 = nn.Conv2d(64, 1, kernel_size=1, stride=1)
+        self.linear = nn.Linear(256*256, 4)
+
+        self.conv3 = nn.Conv2d(96, 1, kernel_size=1, stride=1)
+        self.conv5 = nn.Conv2d(32, 1, kernel_size=1, stride=1)
+        # self.linear2 = nn.Linear(256, 4)
+
+    def forward(self, img):
+        # x = img
+        # mid1 = self.input_conv(x)
+        # x = self.conv_block1(mid1)  # bs 16
+        # # print(x.shape)
+        # x = torch.cat([x, mid1], dim=1)
+        # x = self.conv_block2(x)  # bs 16
+        # # print(x.shape)
+        # x = torch.cat([x, mid1], dim=1)
+        # x = self.conv_block3(x)  # bs 16
+        # x = self.conv3(x)
+        # x = torch.flatten(x, 1, 3)
+        # x = self.linear(x)
+
+        # x = img
+        # mid1 = self.input_conv(x)
+        # x = self.conv_block1(mid1)  # bs 16
+        # # print(x.shape)
+        # x = torch.cat([x, mid1], dim=1)
+        # x = self.conv_block2(x)  # bs 16
+        # # print(x.shape)
+        # # sys.exit()
+        # x = self.conv4(x)
+        # x = torch.flatten(x, 1, 3)
+        # x = self.linear(x)
+
+        x = img
+        mid1 = self.input_conv(x)
+        x = self.conv_block1(mid1)  # bs 16
+        # print(x.shape)
+        # x = torch.cat([x, mid1], dim=1)
+        # x = self.conv_block2(x)  # bs 16
+        # print(x.shape)
+        # sys.exit()
+        x = self.conv5(x)
+        x = torch.flatten(x, 1, 3)
+        x = self.linear(x)
+
+        # x = self.bn(x)
+        # x = self.relu(x)
+        # x = self.linear2(x)
+        # print(x.shape)
+        # sys.exit()
+        # x = img
+        # mid1 = self.input_conv(x)
+        # x = self.conv_block1(mid1)  # bs 16
+        # x = self.maxpool(x)  # [bs, 32, 64, 64]
+        # x = self.conv(x)  # [bs, 4, 64, 64]
+        # x = self.bn(x)
+        # x = self.relu(x)
+        # x = self.maxpool(x)  # [bs, 4, 16, 16]
+        # x = self.conv2(x)  # [bs, 4, 8, 8]
+        # x = torch.flatten(x, 1, 3)
+        # print(x.shape)
+        return x
+
+
+class ConvolutionalBlock(nn.Module):
+    def __init__(self, k=16, r=16):
+        super(ConvolutionalBlock, self).__init__()
+
+        self.conv1 = nn.Conv2d(k, k+r, kernel_size=1, stride=1)
+        self.conv2 = nn.Conv2d(k, k+r, kernel_size=(1, 3),
+                               stride=1, padding=(0, 1))
+        self.conv3 = nn.Conv2d(k, k+r, kernel_size=(3, 1),
+                               stride=1, padding=(1, 0))
+        self.conv4 = nn.Conv2d(k, k+r, kernel_size=3, stride=1, padding=1)
+        self.conv5 = nn.Conv2d(4*(k+r), 4*(k+r), kernel_size=1, stride=1)
+        self.conv6 = nn.Conv2d(4*(k+r), k+r, kernel_size=3,
+                               stride=1, padding=1)
+
+        self.bn1 = nn.BatchNorm2d(k+r)
+        self.bn2 = nn.BatchNorm2d(4*(k+r))
+        self.relu = nn.ReLU()
+
+    def forward(self, img):
+        tmp1 = self.conv1(img)
+        tmp1 = self.bn1(tmp1)
+        tmp1 = self.relu(tmp1)
+
+        tmp2 = self.conv2(img)
+        tmp2 = self.bn1(tmp2)
+        tmp2 = self.relu(tmp2)
+
+        tmp3 = self.conv3(img)
+        tmp3 = self.bn1(tmp3)
+        tmp3 = self.relu(tmp3)
+
+        tmp4 = self.conv4(img)
+        tmp4 = self.bn1(tmp4)
+        tmp4 = self.relu(tmp4)
+
+        x = torch.cat([tmp1, tmp2, tmp3, tmp4], dim=1)  # [bs, 128, 256, 256]
+
+        x = self.conv5(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+
+        x = self.conv6(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+
+        return x
 
 
 class SunspotFeatureModule(torch.nn.Module):
@@ -168,7 +301,6 @@ class EncoderLayer(torch.nn.Module):
         "Follow Figure 1 (left) for connections."
         x = self.sublayer[0](x, lambda x: self.self_attn(x, x, x))
         return self.sublayer[1](x, self.feed_forward)
-
 
 
 # early fusion
